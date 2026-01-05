@@ -1,4 +1,4 @@
-package com.example.SeaTea.global.exceptioin;
+package com.example.SeaTea.global.exception;
 
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
 import com.example.SeaTea.global.code.BaseErrorCode;
