@@ -28,8 +28,8 @@ public class Place extends BaseEntity {
     @Column(name = "naver_place_id", unique = true)
     private Long naverPlaceId;
 
-    @Column(name = "neme")
-    private String neme;
+    @Column(name = "name")
+    private String name;
 
     @Column(name = "thumbnail_image_url", length = 255)
     private String thumbnailImageUrl;

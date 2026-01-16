@@ -1,4 +1,4 @@
-package com.example.SeaTea.domain.member.entitiy;
+package com.example.SeaTea.domain.member.entity;
 
 import com.example.SeaTea.global.common.BaseEntity;
 import jakarta.persistence.Column;

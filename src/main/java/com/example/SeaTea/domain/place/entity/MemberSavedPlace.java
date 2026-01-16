@@ -1,6 +1,6 @@
 package com.example.SeaTea.domain.place.entity;
 
-import com.example.SeaTea.domain.member.entitiy.Member;
+import com.example.SeaTea.domain.member.entity.Member;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -19,7 +19,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table(name = "member_saved_space")
+@Table(name = "member_saved_place")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
@@ -27,8 +27,8 @@ public class MemberSavedPlace {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "member_saved_space_id")
-    private Long memberSavedSpaceId;
+    @Column(name = "member_saved_place_id")
+    private Long memberSavedPlaceId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "place_id")
