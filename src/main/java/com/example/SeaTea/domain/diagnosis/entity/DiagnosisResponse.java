@@ -24,7 +24,7 @@ public class DiagnosisResponse extends BaseEntity {
     @Column(name = "item_code", nullable = false)
     private String itemCode;
 
-    //질문에 대한 사용자의 응답 ex) A, B, C / ture / 100 등
+    //질문에 대한 사용자의 응답 ex) A, B, C / true / 100 등
     @Column(name = "answer_code", nullable = false)
     private String answerCode;
 }
