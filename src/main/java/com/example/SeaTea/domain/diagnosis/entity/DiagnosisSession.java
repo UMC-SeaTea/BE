@@ -1,6 +1,7 @@
 package com.example.SeaTea.domain.diagnosis.entity;
 
 import com.example.SeaTea.domain.diagnosis.enums.Mode;
+import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -16,10 +17,10 @@ public class DiagnosisSession extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-//    //한 사용자가 여러번 진단이 가능.
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "member_id" ,nullable = false )
-//    private Member member;
+    //한 사용자가 여러번 진단이 가능.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id" ,nullable = false )
+    private Member member;
 
     //진단 결과 유형
     @ManyToOne(fetch = FetchType.LAZY)
