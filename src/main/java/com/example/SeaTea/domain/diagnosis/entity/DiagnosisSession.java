@@ -24,7 +24,7 @@ public class DiagnosisSession extends BaseEntity {
 
     //진단 결과 유형
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "type_id" , nullable = false )
+    @JoinColumn(name = "type_id")
     private TastingNoteType type;
 
     //진단 방법 (상세 or 간단)

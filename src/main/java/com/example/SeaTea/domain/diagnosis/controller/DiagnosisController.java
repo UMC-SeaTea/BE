@@ -18,6 +18,7 @@ public class DiagnosisController {
     public ApiResponse<DiagnosisSubmitResponseDTO> submitDetailDiagnosis(
             @RequestBody @Valid DiagnosisSubmitRequestDTO request
     ) {
+        Long memberId = 1L;
         // TODO: service 호출
         return ApiResponse.onSuccess(null);
     }

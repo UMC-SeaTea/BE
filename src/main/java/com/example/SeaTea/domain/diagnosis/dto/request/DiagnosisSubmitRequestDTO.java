@@ -15,6 +15,8 @@ public class DiagnosisSubmitRequestDTO {
     @NotNull
     private Integer step;
 
+    private Long sessionId;
+
     // Q1, Q2: "A" or "B"
     private String q1;
     private String q2;
