@@ -91,9 +91,10 @@ public class DiagnosisStep1 {
             add(scores, TastingNoteTypeCode.SWEET, 1);
             add(scores, TastingNoteTypeCode.FLORAL, 1);
         } else { // 높은 에너지(61~100)
-            add(scores, TastingNoteTypeCode.FLORAL, 2);
+            // 명세(61~100): Fruity +2, Spices +1, Floral +1
+            add(scores, TastingNoteTypeCode.FRUITY, 2);
             add(scores, TastingNoteTypeCode.SPICES, 1);
-            add(scores, TastingNoteTypeCode.FRUITY, 1);
+            add(scores, TastingNoteTypeCode.FLORAL, 1);
         }
     }
 
