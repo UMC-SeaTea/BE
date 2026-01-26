@@ -1,8 +1,8 @@
 package com.example.SeaTea.domain.diagnosis.service;
 
 import com.example.SeaTea.domain.diagnosis.converter.DiagnosisResponseConverter;
-import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisSubmitRequestDTO;
-import com.example.SeaTea.domain.diagnosis.dto.response.DiagnosisSubmitResponseDTO;
+import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisDetailRequestDTO;
+import com.example.SeaTea.domain.diagnosis.dto.response.DiagnosisDetailResponseDTO;
 import com.example.SeaTea.domain.diagnosis.entity.DiagnosisResponse;
 import com.example.SeaTea.domain.diagnosis.entity.DiagnosisSession;
 import com.example.SeaTea.domain.diagnosis.entity.TastingNoteType;
@@ -47,7 +47,7 @@ public class DiagnosisService {
      *
      * 2) Step2 제출: 세션 소유자 검증 후 조회 → Q5~Q8 저장 → Step1/Step2 점수로 최종 타입 결정 → 세션에 저장
      */
-    public DiagnosisSubmitResponseDTO submitDetailDiagnosis(Member member, DiagnosisSubmitRequestDTO req) {
+    public DiagnosisDetailResponseDTO submitDetailDiagnosis(Member member, DiagnosisDetailRequestDTO req) {
 
         if (req.getStep() == null) {
             throw new GeneralException(ErrorStatus._BAD_REQUEST);
@@ -88,7 +88,7 @@ public class DiagnosisService {
 
             // 5) NEED_MORE면 Step2로 유도
             if (result.status() == Status.NEED_MORE) {
-                return new DiagnosisSubmitResponseDTO(
+                return new DiagnosisDetailResponseDTO(
                         "NEED_MORE",
                         result.nextStep(),  // 2
                         null,
@@ -108,7 +108,7 @@ public class DiagnosisService {
             // 이미 영속 상태인 session 엔티티를 업데이트(더티체킹)
             session.updateType(typeEntity);
 
-            return new DiagnosisSubmitResponseDTO(
+            return new DiagnosisDetailResponseDTO(
                     "DONE",
                     null,
                     typeCodeStr,
@@ -166,7 +166,7 @@ public class DiagnosisService {
         // 이미 조회된 session 엔티티를 업데이트(더티체킹)
         session.updateType(finalType);
 
-        return new DiagnosisSubmitResponseDTO(
+        return new DiagnosisDetailResponseDTO(
                 "DONE",
                 null,
                 finalCodeStr,

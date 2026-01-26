@@ -1,6 +1,6 @@
 package com.example.SeaTea.domain.diagnosis.converter;
 
-import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisSubmitRequestDTO;
+import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisDetailRequestDTO;
 import com.example.SeaTea.domain.diagnosis.entity.DiagnosisResponse;
 import com.example.SeaTea.domain.diagnosis.entity.DiagnosisSession;
 
@@ -15,7 +15,7 @@ public class DiagnosisResponseConverter {
 
     public static List<DiagnosisResponse> fromStep1(
             DiagnosisSession session, //엔터티
-            DiagnosisSubmitRequestDTO req //DTO
+            DiagnosisDetailRequestDTO req //DTO
     ) { //응답 리스트 생성
         List<DiagnosisResponse> responses = new ArrayList<>();
 
@@ -35,7 +35,7 @@ public class DiagnosisResponseConverter {
     //step2 요청값을 엔터티로 변환
     public static List<DiagnosisResponse> fromStep2(
             DiagnosisSession session, //엔터티
-            DiagnosisSubmitRequestDTO req //DTO
+            DiagnosisDetailRequestDTO req //DTO
     ) {
         List<DiagnosisResponse> responses = new ArrayList<>();
 

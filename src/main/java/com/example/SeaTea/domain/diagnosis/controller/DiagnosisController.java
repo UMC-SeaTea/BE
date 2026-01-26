@@ -1,7 +1,9 @@
 package com.example.SeaTea.domain.diagnosis.controller;
 
-import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisSubmitRequestDTO;
-import com.example.SeaTea.domain.diagnosis.dto.response.DiagnosisSubmitResponseDTO;
+import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisDetailRequestDTO;
+import com.example.SeaTea.domain.diagnosis.dto.response.DiagnosisDetailResponseDTO;
+import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisQuickRequestDTO;
+import com.example.SeaTea.domain.diagnosis.dto.response.DiagnosisQuickResponseDTO;
 import com.example.SeaTea.domain.diagnosis.service.DiagnosisService;
 import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
@@ -20,9 +22,9 @@ public class DiagnosisController {
 
     // 임시 테스트용: memberId로 멤버 조회 후 진단 제출
     @PostMapping("/detail/test")
-    public ResponseEntity<DiagnosisSubmitResponseDTO> submitDetailDiagnosisTest(
+    public ResponseEntity<DiagnosisDetailResponseDTO> submitDetailDiagnosisTest(
             @RequestParam Long memberId,
-            @RequestBody @Valid DiagnosisSubmitRequestDTO req
+            @RequestBody @Valid DiagnosisDetailRequestDTO req
     ) {
         System.out.println(">>> diagnosis detail test called"); //호출 확인용
         Member member = memberRepository.findById(memberId)
@@ -33,6 +35,20 @@ public class DiagnosisController {
         //성공이면 200 OK, DTO를 JSON으로 반환
     }
 
+    // 임시 테스트용: memberId로 멤버 조회 후 간단 진단 제출
+    @PostMapping("/quick/test")
+    public ResponseEntity<DiagnosisQuickResponseDTO> submitQuickDiagnosisTest(
+            @RequestParam Long memberId,
+            @RequestBody @Valid DiagnosisQuickRequestDTO req
+    ) {
+        System.out.println(">>> diagnosis quick test called"); // 호출 확인용
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("member not found: " + memberId));
+
+        return ResponseEntity.ok(diagnosisService.submitQuickDiagnosis(member, req));
+    }
+
 //    // 나중에 인증 붙이면 이거로 교체
 //    @PostMapping("/detail")
 //    public ResponseEntity<DiagnosisSubmitResponseDTO> submitDetailDiagnosis(
@@ -40,5 +56,14 @@ public class DiagnosisController {
 //            @RequestBody @Valid DiagnosisSubmitRequestDTO req
 //    ) {
 //        return ResponseEntity.ok(diagnosisService.submitDetailDiagnosis(member, req));
+//    }
+
+//    // 나중에 인증 붙이면 이거로 교체
+//    @PostMapping("/quick")
+//    public ResponseEntity<DiagnosisQuickResponseDTO> submitQuickDiagnosis(
+//            @AuthenticationPrincipal Member member,
+//            @RequestBody @Valid DiagnosisQuickRequestDTO req
+//    ) {
+//        return ResponseEntity.ok(diagnosisService.submitQuickDiagnosis(member, req));
 //    }
 }

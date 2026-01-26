@@ -1,6 +1,6 @@
 package com.example.SeaTea.domain.diagnosis.scoring;
 
-import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisSubmitRequestDTO;
+import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisDetailRequestDTO;
 import com.example.SeaTea.domain.diagnosis.enums.TastingNoteTypeCode;
 
 import java.util.EnumMap;
@@ -17,7 +17,7 @@ public class DiagnosisStep2 {
      */
     //step2의 누적 점수를 담는 Map<타입,점수>을 반환
     public static Map<TastingNoteTypeCode, Integer> scoreStep2(
-            DiagnosisSubmitRequestDTO req
+            DiagnosisDetailRequestDTO req
     ) {//step2와는 다르게 그냥 DTO에서 추출
         EnumMap<TastingNoteTypeCode, Integer> scores = initScores();
 

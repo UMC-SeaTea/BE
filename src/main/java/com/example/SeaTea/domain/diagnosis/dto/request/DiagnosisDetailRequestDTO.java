@@ -11,7 +11,7 @@ import java.util.List;
 
 @Getter
 @NoArgsConstructor
-public class DiagnosisSubmitRequestDTO {
+public class DiagnosisDetailRequestDTO {
     @NotNull
     private Integer step;
 
