@@ -31,4 +31,8 @@ public class DiagnosisSession extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Mode mode;
+
+    public void updateType(TastingNoteType type) {
+        this.type = type;
+    }
 }

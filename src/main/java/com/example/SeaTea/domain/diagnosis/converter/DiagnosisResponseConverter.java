@@ -5,11 +5,14 @@ import com.example.SeaTea.domain.diagnosis.entity.DiagnosisResponse;
 import com.example.SeaTea.domain.diagnosis.entity.DiagnosisSession;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DiagnosisResponseConverter {
 
-    //step1 요청값을 엔터티로 변환
+    /** Step2 처리 시 DB에 저장된 Step1(Q1~Q4) 응답을 복원하기 위한 DTO */
+    public record Step1Answers(String q1, String q2, Integer q3, List<String> q4) {}
+
     public static List<DiagnosisResponse> fromStep1(
             DiagnosisSession session, //엔터티
             DiagnosisSubmitRequestDTO req //DTO
@@ -42,6 +45,46 @@ public class DiagnosisResponseConverter {
         add(responses, session, "Q8", req.getQ8());
 
         return responses;
+    }
+
+    /**
+     * Step2 요청에는 q1~q4가 포함되지 않으므로, 세션에 저장된 Step1(Q1~Q4) 응답을 DB에서 읽어 복원한다.
+     * Q4는 저장 시 "ALONE_ANYONE" 처럼 '_'로 merge 되었으므로 split("_")로 되돌린다.
+     */
+    public static Step1Answers restoreStep1Answers(List<DiagnosisResponse> responses) {
+        String q1 = null;
+        String q2 = null;
+        Integer q3 = null;
+        List<String> q4 = null;
+
+        for (DiagnosisResponse r : responses) {
+            if (r.getItemCode() == null) continue;
+
+            switch (r.getItemCode()) {
+                case "Q1" -> q1 = r.getAnswerCode();
+                case "Q2" -> q2 = r.getAnswerCode();
+                case "Q3" -> {
+                    if (r.getAnswerCode() != null) {
+                        q3 = Integer.parseInt(r.getAnswerCode());
+                    }
+                }
+                case "Q4" -> {
+                    if (r.getAnswerCode() != null) {
+                        q4 = Arrays.asList(r.getAnswerCode().split("_"));
+                    }
+                }
+                default -> {
+                    // ignore
+                }
+            }
+        }
+
+        // Step1 응답 누락은 데이터 정합성 문제이므로 요청 오류로 처리
+        if (q1 == null || q2 == null || q3 == null || q4 == null || q4.isEmpty()) {
+            throw new IllegalArgumentException("Step1 answers are missing for this session.");
+        }
+
+        return new Step1Answers(q1, q2, q3, q4);
     }
 
     //Q4의 응답을 하나의 row에 담기 위함.
