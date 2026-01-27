@@ -7,9 +7,9 @@ import com.example.SeaTea.domain.diagnosis.dto.response.DiagnosisQuickResponseDT
 import com.example.SeaTea.domain.diagnosis.service.DiagnosisService;
 import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
+import com.example.SeaTea.global.apiPayLoad.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,7 +22,7 @@ public class DiagnosisController {
 
     // 임시 테스트용: memberId로 멤버 조회 후 진단 제출
     @PostMapping("/detail/test")
-    public ResponseEntity<DiagnosisDetailResponseDTO> submitDetailDiagnosisTest(
+    public ApiResponse<DiagnosisDetailResponseDTO> submitDetailDiagnosisTest(
             @RequestParam Long memberId,
             @RequestBody @Valid DiagnosisDetailRequestDTO req
     ) {
@@ -31,13 +31,13 @@ public class DiagnosisController {
                 .orElseThrow(() -> new IllegalArgumentException("member not found: " + memberId));
         //없는 멤버면 에러
 
-        return ResponseEntity.ok(diagnosisService.submitDetailDiagnosis(member, req));
+        return ApiResponse.onSuccess(diagnosisService.submitDetailDiagnosis(member, req));
         //성공이면 200 OK, DTO를 JSON으로 반환
     }
 
     // 임시 테스트용: memberId로 멤버 조회 후 간단 진단 제출
     @PostMapping("/quick/test")
-    public ResponseEntity<DiagnosisQuickResponseDTO> submitQuickDiagnosisTest(
+    public ApiResponse<DiagnosisQuickResponseDTO> submitQuickDiagnosisTest(
             @RequestParam Long memberId,
             @RequestBody @Valid DiagnosisQuickRequestDTO req
     ) {
@@ -46,7 +46,7 @@ public class DiagnosisController {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("member not found: " + memberId));
 
-        return ResponseEntity.ok(diagnosisService.submitQuickDiagnosis(member, req));
+        return ApiResponse.onSuccess(diagnosisService.submitQuickDiagnosis(member, req));
     }
 
 //    // 나중에 인증 붙이면 이거로 교체
