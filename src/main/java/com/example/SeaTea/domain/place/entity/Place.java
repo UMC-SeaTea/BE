@@ -1,5 +1,6 @@
 package com.example.SeaTea.domain.place.entity;
 
+import com.example.SeaTea.domain.diagnosis.entity.TastingNoteType;
 import com.example.SeaTea.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -18,10 +19,11 @@ public class Place extends BaseEntity {
     @Column(name = "place_id")
     private Long placeId;
 
-    // TastingType 엔티티 생성 후 FK 관계 매핑
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "tasting_type_id")
-    // private TastingType tastingType;
+    // FK 컬럼을 읽기 전용으로
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tasting_type_id", insertable = false, updatable = false)
+    private TastingNoteType tastingType;
+
     @Column(name = "tasting_type_id")
     private Long tastingTypeId;
 
