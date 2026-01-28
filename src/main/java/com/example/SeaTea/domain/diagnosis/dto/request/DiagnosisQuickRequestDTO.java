@@ -1,5 +1,6 @@
 package com.example.SeaTea.domain.diagnosis.dto.request;
 
+import com.example.SeaTea.domain.diagnosis.enums.QuickKeyword;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -17,6 +18,6 @@ public class DiagnosisQuickRequestDTO {
 
     @NotNull(message = "keywords는 필수입니다.")
     @Size(min = 3, max = 3, message = "keywords는 정확히 3개를 선택해야 합니다.")
-    private List<String> keywords;
+    private List<QuickKeyword> keywords;
 
 }

@@ -4,7 +4,8 @@ import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisDetailRequestDTO
 import com.example.SeaTea.domain.diagnosis.dto.response.DiagnosisDetailResponseDTO;
 import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisQuickRequestDTO;
 import com.example.SeaTea.domain.diagnosis.dto.response.DiagnosisQuickResponseDTO;
-import com.example.SeaTea.domain.diagnosis.service.DiagnosisService;
+import com.example.SeaTea.domain.diagnosis.service.DiagnosisQuickService;
+import com.example.SeaTea.domain.diagnosis.service.DiagnosisDetailService;
 import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
@@ -17,8 +18,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/diagnosis")
 public class DiagnosisController {
 
-    private final DiagnosisService diagnosisService;
+    private final DiagnosisDetailService diagnosisDetailService;
     private final MemberRepository memberRepository;
+    private final DiagnosisQuickService diagnosisQuickService;
 
     // 임시 테스트용: memberId로 멤버 조회 후 진단 제출
     @PostMapping("/detail/test")
@@ -31,7 +33,7 @@ public class DiagnosisController {
                 .orElseThrow(() -> new IllegalArgumentException("member not found: " + memberId));
         //없는 멤버면 에러
 
-        return ApiResponse.onSuccess(diagnosisService.submitDetailDiagnosis(member, req));
+        return ApiResponse.onSuccess(diagnosisDetailService.submitDetailDiagnosis(member, req));
         //성공이면 200 OK, DTO를 JSON으로 반환
     }
 
@@ -46,7 +48,7 @@ public class DiagnosisController {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("member not found: " + memberId));
 
-        return ApiResponse.onSuccess(diagnosisService.submitQuickDiagnosis(member, req));
+        return ApiResponse.onSuccess(diagnosisQuickService.submitQuickDiagnosis(member, req));
     }
 
 //    // 나중에 인증 붙이면 이거로 교체
@@ -64,6 +66,6 @@ public class DiagnosisController {
 //            @AuthenticationPrincipal Member member,
 //            @RequestBody @Valid DiagnosisQuickRequestDTO req
 //    ) {
-//        return ResponseEntity.ok(diagnosisService.submitQuickDiagnosis(member, req));
+//        return ResponseEntity.ok(diagnosisQuickService.submitQuickDiagnosis(member, req));
 //    }
 }

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class DiagnosisResponseConverter {
+public class DiagnosisDetailConverter {
 
     /** Step2 처리 시 DB에 저장된 Step1(Q1~Q4) 응답을 복원하기 위한 DTO */
     public record Step1Answers(String q1, String q2, Integer q3, List<String> q4) {}

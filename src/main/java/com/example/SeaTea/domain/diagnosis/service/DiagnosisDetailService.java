@@ -1,6 +1,6 @@
 package com.example.SeaTea.domain.diagnosis.service;
 
-import com.example.SeaTea.domain.diagnosis.converter.DiagnosisResponseConverter;
+import com.example.SeaTea.domain.diagnosis.converter.DiagnosisDetailConverter;
 import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisDetailRequestDTO;
 import com.example.SeaTea.domain.diagnosis.dto.response.DiagnosisDetailResponseDTO;
 import com.example.SeaTea.domain.diagnosis.entity.DiagnosisResponse;
@@ -31,7 +31,7 @@ import java.util.LinkedHashMap;
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
-public class DiagnosisService {
+public class DiagnosisDetailService {
 
     private final DiagnosisSessionRepository diagnosisSessionRepository;
     private final DiagnosisResponseRepository diagnosisResponseRepository;
@@ -68,7 +68,7 @@ public class DiagnosisService {
             );
 
             // 2) Step1 응답 저장 (DTO → Entity 변환은 Converter 담당)
-            List<DiagnosisResponse> step1Responses = DiagnosisResponseConverter.fromStep1(session, req);
+            List<DiagnosisResponse> step1Responses = DiagnosisDetailConverter.fromStep1(session, req);
             diagnosisResponseRepository.saveAll(step1Responses);
 
             // 3) Step1 점수 계산 (q1~q4 기반)
@@ -129,13 +129,13 @@ public class DiagnosisService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus._BAD_REQUEST));
 
         // 2) Step2 응답 저장 (DTO → Entity 변환은 Converter 담당)
-        List<DiagnosisResponse> step2Responses = DiagnosisResponseConverter.fromStep2(session, req);
+        List<DiagnosisResponse> step2Responses = DiagnosisDetailConverter.fromStep2(session, req);
         diagnosisResponseRepository.saveAll(step2Responses);
 
         // 3) Step1/Step2 점수 계산
         // Step2 요청에는 q1~q4가 포함되지 않으므로, DB에 저장된 Step1(Q1~Q4) 응답을 복원해서 Step1 점수를 계산한다.
         List<DiagnosisResponse> savedStep1Responses = diagnosisResponseRepository.findAllBySessionId(session.getId());
-        DiagnosisResponseConverter.Step1Answers step1 = DiagnosisResponseConverter.restoreStep1Answers(savedStep1Responses);
+        DiagnosisDetailConverter.Step1Answers step1 = DiagnosisDetailConverter.restoreStep1Answers(savedStep1Responses);
 
         Map<TastingNoteTypeCode, Integer> step1Scores = DiagnosisStep1.scoreStep1(
                 step1.q1(),
