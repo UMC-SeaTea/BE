@@ -149,6 +149,9 @@ public class PlaceQueryService {
         if (lat == null || lng == null) {
             throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
         }
+        if (!Double.isFinite(lat) || !Double.isFinite(lng)) {
+            throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+        }
         if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
             throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
         }

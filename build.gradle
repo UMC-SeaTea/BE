@@ -24,9 +24,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
-	// mysql 주석 처리
-	//runtimeOnly 'com.mysql:mysql-connector-j'
-	// h2 추가
+	// mysql
+	runtimeOnly 'com.mysql:mysql-connector-j'
+	// h2
     runtimeOnly 'com.h2database:h2'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
