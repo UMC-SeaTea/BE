@@ -1,6 +1,6 @@
 package com.example.SeaTea.domain.diagnosis.scoring;
 
-import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisSubmitRequestDTO;
+import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisDetailRequestDTO;
 import com.example.SeaTea.domain.diagnosis.enums.Status;
 import com.example.SeaTea.domain.diagnosis.enums.TastingNoteTypeCode;
 
@@ -41,7 +41,7 @@ public class DiagnosisResultDecider {
     /** Step2까지 반영해서 최종 타입 1개 확정 */
     //step1, step2: 각 단계에서 나온 타입별 점수 , req : Q3의 값을 타이브레이커용으로 사용하기 위함
     public static TastingNoteTypeCode decideFinal(
-            DiagnosisSubmitRequestDTO req,
+            DiagnosisDetailRequestDTO req,
             Map<TastingNoteTypeCode, Integer> step1Scores,
             Map<TastingNoteTypeCode, Integer> step2Scores
     ) {

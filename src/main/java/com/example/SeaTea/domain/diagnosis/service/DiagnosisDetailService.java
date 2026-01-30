@@ -1,8 +1,8 @@
 package com.example.SeaTea.domain.diagnosis.service;
 
-import com.example.SeaTea.domain.diagnosis.converter.DiagnosisResponseConverter;
-import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisSubmitRequestDTO;
-import com.example.SeaTea.domain.diagnosis.dto.response.DiagnosisSubmitResponseDTO;
+import com.example.SeaTea.domain.diagnosis.converter.DiagnosisDetailConverter;
+import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisDetailRequestDTO;
+import com.example.SeaTea.domain.diagnosis.dto.response.DiagnosisDetailResponseDTO;
 import com.example.SeaTea.domain.diagnosis.entity.DiagnosisResponse;
 import com.example.SeaTea.domain.diagnosis.entity.DiagnosisSession;
 import com.example.SeaTea.domain.diagnosis.entity.TastingNoteType;
@@ -25,12 +25,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashMap;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
-public class DiagnosisService {
+public class DiagnosisDetailService {
 
     private final DiagnosisSessionRepository diagnosisSessionRepository;
     private final DiagnosisResponseRepository diagnosisResponseRepository;
@@ -46,7 +47,7 @@ public class DiagnosisService {
      *
      * 2) Step2 제출: 세션 소유자 검증 후 조회 → Q5~Q8 저장 → Step1/Step2 점수로 최종 타입 결정 → 세션에 저장
      */
-    public DiagnosisSubmitResponseDTO submitDetailDiagnosis(Member member, DiagnosisSubmitRequestDTO req) {
+    public DiagnosisDetailResponseDTO submitDetailDiagnosis(Member member, DiagnosisDetailRequestDTO req) {
 
         if (req.getStep() == null) {
             throw new GeneralException(ErrorStatus._BAD_REQUEST);
@@ -67,7 +68,7 @@ public class DiagnosisService {
             );
 
             // 2) Step1 응답 저장 (DTO → Entity 변환은 Converter 담당)
-            List<DiagnosisResponse> step1Responses = DiagnosisResponseConverter.fromStep1(session, req);
+            List<DiagnosisResponse> step1Responses = DiagnosisDetailConverter.fromStep1(session, req);
             diagnosisResponseRepository.saveAll(step1Responses);
 
             // 3) Step1 점수 계산 (q1~q4 기반)
@@ -87,9 +88,9 @@ public class DiagnosisService {
 
             // 5) NEED_MORE면 Step2로 유도
             if (result.status() == Status.NEED_MORE) {
-                return new DiagnosisSubmitResponseDTO(
+                return new DiagnosisDetailResponseDTO(
                         "NEED_MORE",
-                        result.nextStep(),  // 보통 2
+                        result.nextStep(),  // 2
                         null,
                         session.getId()
                 );
@@ -104,16 +105,10 @@ public class DiagnosisService {
                     // NOTE: 현재 ErrorStatus에 NOT_FOUND가 없어서 BAD_REQUEST로 처리 (원하면 NOT_FOUND 추가 권장)
                     .orElseThrow(() -> new GeneralException(ErrorStatus._BAD_REQUEST));
 
-            diagnosisSessionRepository.save(
-                    DiagnosisSession.builder()
-                            .id(session.getId())
-                            .member(session.getMember())
-                            .mode(session.getMode())
-                            .type(typeEntity)
-                            .build()
-            );
+            // 이미 영속 상태인 session 엔티티를 업데이트(더티체킹)
+            session.updateType(typeEntity);
 
-            return new DiagnosisSubmitResponseDTO(
+            return new DiagnosisDetailResponseDTO(
                     "DONE",
                     null,
                     typeCodeStr,
@@ -134,21 +129,29 @@ public class DiagnosisService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus._BAD_REQUEST));
 
         // 2) Step2 응답 저장 (DTO → Entity 변환은 Converter 담당)
-        List<DiagnosisResponse> step2Responses = DiagnosisResponseConverter.fromStep2(session, req);
+        List<DiagnosisResponse> step2Responses = DiagnosisDetailConverter.fromStep2(session, req);
         diagnosisResponseRepository.saveAll(step2Responses);
 
         // 3) Step1/Step2 점수 계산
-        // NOTE: Step2 요청에 q1~q4가 포함되지 않는 구조라면, Step1 응답을 DB에서 조회해 복원해야 함.
-        //       (DiagnosisResponseRepository.findAllBySessionId(sessionId) 활용)
+        // Step2 요청에는 q1~q4가 포함되지 않으므로, DB에 저장된 Step1(Q1~Q4) 응답을 복원해서 Step1 점수를 계산한다.
+        List<DiagnosisResponse> savedStep1Responses = diagnosisResponseRepository.findAllBySessionId(session.getId());
+        DiagnosisDetailConverter.Step1Answers step1 = DiagnosisDetailConverter.restoreStep1Answers(savedStep1Responses);
+
         Map<TastingNoteTypeCode, Integer> step1Scores = DiagnosisStep1.scoreStep1(
-                req.getQ1(),
-                req.getQ2(),
-                req.getQ3(),
-                req.getQ4()
+                step1.q1(),
+                step1.q2(),
+                step1.q3(),
+                step1.q4()
         );
 
         // 3-2) Step2 점수 계산 (DTO 기반)
         Map<TastingNoteTypeCode, Integer> step2Scores = DiagnosisStep2.scoreStep2(req);
+
+        // Step2 점수 및 합산 점수 로그 (Step1 로그는 Step1 요청 시 이미 출력되므로 Step2에서는 추가 출력만)
+        Map<TastingNoteTypeCode, Integer> totalScores = mergeScores(step1Scores, step2Scores);
+
+        log.warn("[STEP2 SCORES] {}", step2Scores);
+        log.warn("[TOTAL SCORES] {}", totalScores);
 
         // 4) Step1+Step2 점수로 최종 타입 결정
         TastingNoteTypeCode finalCode =
@@ -160,20 +163,43 @@ public class DiagnosisService {
         TastingNoteType finalType = tastingNoteTypeRepository.findByCode(finalCodeStr)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._BAD_REQUEST));
 
-        diagnosisSessionRepository.save(
-                DiagnosisSession.builder()
-                        .id(session.getId())
-                        .member(session.getMember())
-                        .mode(session.getMode())
-                        .type(finalType)
-                        .build()
-        );
+        // 이미 조회된 session 엔티티를 업데이트(더티체킹)
+        session.updateType(finalType);
 
-        return new DiagnosisSubmitResponseDTO(
+        return new DiagnosisDetailResponseDTO(
                 "DONE",
                 null,
                 finalCodeStr,
                 session.getId()
         );
+    }
+    /**
+     * Step1/Step2 점수 맵을 합산해서 반환한다.
+     *
+     * - 로그 가독성을 위해 TastingNoteTypeCode enum 선언 순서대로 정렬된 Map(LinkedHashMap)으로 반환한다.
+     */
+    private Map<TastingNoteTypeCode, Integer> mergeScores(
+            Map<TastingNoteTypeCode, Integer> step1Scores,
+            Map<TastingNoteTypeCode, Integer> step2Scores
+    ) {
+        // enum 선언 순서대로 고정 출력되도록 LinkedHashMap 사용
+        Map<TastingNoteTypeCode, Integer> merged = new LinkedHashMap<>();
+
+        // 먼저 모든 타입을 0으로 채워서 순서를 고정
+        for (TastingNoteTypeCode code : TastingNoteTypeCode.values()) {
+            merged.put(code, 0);
+        }
+
+        // Step1 점수 반영
+        if (step1Scores != null) {
+            step1Scores.forEach((k, v) -> merged.merge(k, v, Integer::sum));
+        }
+
+        // Step2 점수 반영
+        if (step2Scores != null) {
+            step2Scores.forEach((k, v) -> merged.merge(k, v, Integer::sum));
+        }
+
+        return merged;
     }
 }
