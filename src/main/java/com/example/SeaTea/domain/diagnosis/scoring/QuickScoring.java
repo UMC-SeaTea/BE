@@ -34,11 +34,11 @@ public class QuickScoring {
 
     private record MainSub(TastingNoteTypeCode main, TastingNoteTypeCode sub) {}
 
-    /** 점수 계산만 담당 */
-    public static Map<TastingNoteTypeCode, Double> score(List<QuickKeyword> keywords) {
-        EnumMap<TastingNoteTypeCode, Double> scores = new EnumMap<>(TastingNoteTypeCode.class);
+    // 점수 계산만 담당
+    public static Map<TastingNoteTypeCode, Integer> score(List<QuickKeyword> keywords) {
+        EnumMap<TastingNoteTypeCode, Integer> scores = new EnumMap<>(TastingNoteTypeCode.class);
         for (TastingNoteTypeCode type : TastingNoteTypeCode.values()) {
-            scores.put(type, 0.0);
+            scores.put(type, 0);
         }
 
         if (keywords == null) return scores;

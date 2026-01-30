@@ -53,19 +53,19 @@ public class DiagnosisController {
 
 //    // 나중에 인증 붙이면 이거로 교체
 //    @PostMapping("/detail")
-//    public ResponseEntity<DiagnosisSubmitResponseDTO> submitDetailDiagnosis(
+//    public ApiResponse<DiagnosisDetailResponseDTO> submitDetailDiagnosis(
 //            @AuthenticationPrincipal Member member,
-//            @RequestBody @Valid DiagnosisSubmitRequestDTO req
+//            @RequestBody @Valid DiagnosisDetailRequestDTO req
 //    ) {
-//        return ResponseEntity.ok(diagnosisService.submitDetailDiagnosis(member, req));
+//        return ApiResponse.onSuccess(diagnosisDetailService.submitDetailDiagnosis(member, req));
 //    }
 
 //    // 나중에 인증 붙이면 이거로 교체
 //    @PostMapping("/quick")
-//    public ResponseEntity<DiagnosisQuickResponseDTO> submitQuickDiagnosis(
+//    public ApiResponse<DiagnosisQuickResponseDTO> submitQuickDiagnosis(
 //            @AuthenticationPrincipal Member member,
 //            @RequestBody @Valid DiagnosisQuickRequestDTO req
 //    ) {
-//        return ResponseEntity.ok(diagnosisQuickService.submitQuickDiagnosis(member, req));
+//        return ApiResponse.onSuccess(diagnosisQuickService.submitQuickDiagnosis(member, req));
 //    }
 }

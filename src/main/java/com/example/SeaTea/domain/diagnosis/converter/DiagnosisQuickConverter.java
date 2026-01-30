@@ -49,7 +49,7 @@ public class DiagnosisQuickConverter {
     public static DiagnosisQuickResponseDTO toResponseDTO(
             TastingNoteTypeCode resultType,
             List<QuickKeyword> keywords,
-            Map<TastingNoteTypeCode, Double> scores
+            Map<TastingNoteTypeCode, Integer> scores
     ) {
         return DiagnosisQuickResponseDTO.builder()
                 .resultType(resultType)

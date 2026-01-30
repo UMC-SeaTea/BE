@@ -13,7 +13,7 @@ public enum QuickKeyword {
     SWEET_SOUR,     // 새콤달콤
     HIGH_TENSION,   // 하이텐션
     MEDITATIVE,     // 명상적
-    RHYTHMICAL,       // 리드미컬
+    RHYTHMICAL,     // 리드미컬
     UNPREDICTABLE,  // 예측불가
     SELF_CARE,      // 셀프케어
     NEW,            // 새로운

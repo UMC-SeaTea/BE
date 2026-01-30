@@ -49,16 +49,16 @@ public class DiagnosisQuickService {
         diagnosisResponseRepository.saveAll(responses);
 
         // 3) 점수 계산
-        Map<TastingNoteTypeCode, Double> scores = QuickScoring.score(keywords);
+        Map<TastingNoteTypeCode, Integer> scores = QuickScoring.score(keywords);
 
         // 4) 결과 타입 결정 (동점 → 첫 번째 키워드 main)
-        double maxScore = scores.values().stream()
-                .mapToDouble(Double::doubleValue)
+        int maxScore = scores.values().stream()
+                .mapToInt(Integer::intValue)
                 .max()
-                .orElse(0.0);
+                .orElse(0);
 
         List<TastingNoteTypeCode> candidates = scores.entrySet().stream()
-                .filter(e -> e.getValue() == maxScore)
+                .filter(e -> e.getValue() != null && e.getValue() == maxScore)
                 .map(Map.Entry::getKey)
                 .toList();
 

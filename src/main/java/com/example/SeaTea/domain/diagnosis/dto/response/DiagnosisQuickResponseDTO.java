@@ -20,5 +20,5 @@ public class DiagnosisQuickResponseDTO {
     /** 최종 결과 타입 코드 */
     private TastingNoteTypeCode resultType;
     private List<QuickKeyword> keywords;
-    private Map<TastingNoteTypeCode, Double> scores;
+    private Map<TastingNoteTypeCode, Integer> scores;
 }
