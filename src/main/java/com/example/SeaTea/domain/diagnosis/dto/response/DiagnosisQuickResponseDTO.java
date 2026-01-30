@@ -18,7 +18,7 @@ import java.util.Map;
 public class DiagnosisQuickResponseDTO {
 
     /** 최종 결과 타입 코드 */
-    private TastingNoteTypeCode resultType;
+    private TastingNoteTypeCode resultTypeCode;
     private List<QuickKeyword> keywords;
     private Map<TastingNoteTypeCode, Integer> scores;
 }
