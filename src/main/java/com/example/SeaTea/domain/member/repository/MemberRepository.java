@@ -1,5 +1,7 @@
 package com.example.SeaTea.domain.member.repository;
 
-public class MemberRepository {
+import com.example.SeaTea.domain.member.entity.Member;
+import org.springframework.data.jpa.repository.JpaRepository;
 
+public interface MemberRepository extends JpaRepository<Member, Long> {
 }
