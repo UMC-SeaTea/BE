@@ -11,7 +11,6 @@ public class MemberResDTO {
   public record JoinDTO(
       Long id,
       LocalDateTime createdAt
-//      ,String profile_image
   ){}
 
   // 테스트

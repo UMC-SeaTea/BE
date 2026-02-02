@@ -3,6 +3,7 @@ package com.example.SeaTea.domain.member.converter;
 import com.example.SeaTea.domain.member.dto.request.MemberReqDTO;
 import com.example.SeaTea.domain.member.dto.response.MemberResDTO;
 import com.example.SeaTea.domain.member.entity.Member;
+import com.example.SeaTea.global.auth.enums.Role;
 
 public class MemberConverter {
 
@@ -18,12 +19,16 @@ public class MemberConverter {
 
   // DTO -> Entity
   public static Member toMember(
-      MemberReqDTO.JoinDTO dto
+      MemberReqDTO.JoinDTO dto,
+      String password,
+      Role role
   ){
     return Member.builder()
         .email(dto.email())
+        .password(password)
+        .role(role)
         .nickname(dto.nickname())
-//        .profile_image(dto.profile_image())
+        .profile_image(dto.profile_image())
         .build();
   }
 

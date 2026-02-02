@@ -1,8 +1,11 @@
 package com.example.SeaTea.domain.member.entity;
 
+import com.example.SeaTea.global.auth.enums.Role;
 import com.example.SeaTea.global.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -34,9 +37,12 @@ public class Member extends BaseEntity {
   @Column(nullable = false, unique = true)
   private String nickname;
 
+  @Column
+  private String profile_image;
+
 //  role 인가처리
-//  @Enumerated(EnumType.STRING)
-//  private Role role; // USER, ADMIN
+  @Enumerated(EnumType.STRING)
+  private Role role; // USER, ADMIN
 
 //  status 탈퇴/차단 처리
 //  @Enumerated(EnumType.STRING)
