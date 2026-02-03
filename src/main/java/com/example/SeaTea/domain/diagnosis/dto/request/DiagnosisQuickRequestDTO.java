@@ -16,8 +16,8 @@ import java.util.List;
 @Getter
 public class DiagnosisQuickRequestDTO {
 
-    @NotNull(message = "keywords는 필수입니다.")
+    @NotNull(message = "keywords는 필수입니다.") //리스트 자체가 null인지 확인하는거지, 요소는 검증x
     @Size(min = 3, max = 3, message = "keywords는 정확히 3개를 선택해야 합니다.")
-    private List<QuickKeyword> keywords;
+    private List<@NotNull QuickKeyword> keywords; //각 요소도 null 불가
 
 }
