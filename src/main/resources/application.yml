@@ -9,8 +9,9 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+#    h2 인메모리 DB 임시 띄우기 (URL 환경변수도 변경)
     driver-class-name: com.mysql.cj.jdbc.Driver
-
+#    driver-class-name: org.h2.Driver
   jpa:
     hibernate:
       ddl-auto: update
@@ -18,9 +19,17 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        #    h2 인메모리 DB 임시 띄우기
         dialect: org.hibernate.dialect.MySQL8Dialect
+#        dialect: org.hibernate.dialect.H2Dialect
         jdbc:
           time_zone: Asia/Seoul
+
+  #    h2 인메모리 DB 임시 띄우기
+#  h2:
+#    console:
+#      enabled: true
+#      path: /h2-console
 
 server:
   port: ${SERVER_PORT:8080}

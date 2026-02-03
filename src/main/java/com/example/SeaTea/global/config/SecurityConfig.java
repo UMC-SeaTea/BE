@@ -48,4 +48,39 @@ public class SecurityConfig {
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
+
+  // ********* 관리자 페이지 테스트
+//  private final String[] allowUris = {
+//    "/sign-up",
+//           //"/swagger-ui/**",
+//           //"/swagger-resources/**",
+//           //"/v3/api-docs/**",
+//  };
+//
+//  @Bean
+//  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//    http
+//        .authorizeHttpRequests(requests -> requests
+//            .requestMatchers(allowUris).permitAll()
+//            .requestMatchers("/swagger-ui/index.html").hasRole("ADMIN")
+//            .anyRequest().authenticated()
+//        )
+//        .formLogin(form -> form
+//            .defaultSuccessUrl("/", true)
+//            .permitAll()
+//        )
+//        .csrf(AbstractHttpConfigurer::disable)
+//        .logout(logout -> logout
+//            .logoutUrl("/logout")
+//            .logoutSuccessUrl("/login?logout")
+//            .permitAll()
+//        );
+//
+//    return http.build();
+//  }
+//
+//  @Bean
+//  public PasswordEncoder passwordEncoder() {
+//    return new BCryptPasswordEncoder();
+//  }
 }
