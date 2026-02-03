@@ -13,6 +13,16 @@ public class MemberResDTO {
       LocalDateTime createdAt
   ){}
 
+  // 로그인 (로그인 전용 / 조회 전용 분리 -> 확장)
+  @Builder
+  public record LoginDTO(
+      Long id,
+      String email,
+      String password,
+      String role,
+      String profile_image
+  ){}
+
   // 테스트
   @Builder
   @Getter

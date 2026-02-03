@@ -12,6 +12,11 @@ public class CustomUserDetails implements UserDetails {
 
   private final Member member;
 
+//  CustomSuccessHandler에서 Member 가져오기
+  public Member getMember() {
+    return member;
+  }
+
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
     return List.of(() -> member.getRole().toString());

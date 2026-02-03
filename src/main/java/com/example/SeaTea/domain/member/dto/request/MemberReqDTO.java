@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public class MemberReqDTO {
 
+  // 회원가입
   public record JoinDTO(
       @NotBlank
       String email,

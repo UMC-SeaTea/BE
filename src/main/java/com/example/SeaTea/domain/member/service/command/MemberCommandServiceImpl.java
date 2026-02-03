@@ -18,6 +18,7 @@ public class MemberCommandServiceImpl implements MemberCommandService {
   private final MemberRepository memberRepository;
   private final PasswordEncoder passwordEncoder;
 
+  // 회원가입
   @Override
   @Transactional
   public MemberResDTO.JoinDTO signup(
