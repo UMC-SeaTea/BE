@@ -92,6 +92,8 @@ public class DiagnosisController {
                 .orElseThrow(() -> new IllegalArgumentException("member not found: " + memberId));
         return ApiResponse.onSuccess(diagnosisResultService.getMyHistory(member));
     }
+
+    //나중에 인증붙으면 교체
     // @GetMapping("/me")
     // public ApiResponse<DiagnosisResultResponseDTO> getMyDiagnosisResult(
     //         @AuthenticationPrincipal Member member
