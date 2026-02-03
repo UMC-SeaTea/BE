@@ -52,7 +52,7 @@ public class DiagnosisQuickConverter {
             Map<TastingNoteTypeCode, Integer> scores
     ) {
         return DiagnosisQuickResponseDTO.builder()
-                .resultType(resultType)
+                .resultTypeCode(resultType)
                 .keywords(keywords)
                 .scores(scores)
                 .build();
