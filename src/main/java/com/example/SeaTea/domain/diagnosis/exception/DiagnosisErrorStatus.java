@@ -24,13 +24,13 @@ public enum DiagnosisErrorStatus implements BaseErrorCode {
 
     _SESSION_NOT_FOUND(
             HttpStatus.NOT_FOUND,
-            "DIAGNOSIS404_1",
+            "DIAGNOSIS404",
             "진단 세션을 찾을 수 없습니다."
     ),
 
-    _TYPE_NOT_FOUND(
+    _TYPE_NOT_FOUND( //타입DB에 값이 안들어가 있음.
             HttpStatus.INTERNAL_SERVER_ERROR,
-            "DIAGNOSIS500_1",
+            "DIAGNOSIS500",
             "결과 타입 정보를 찾을 수 없습니다."
     );
 

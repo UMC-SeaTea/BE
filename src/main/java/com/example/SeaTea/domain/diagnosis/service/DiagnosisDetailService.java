@@ -160,7 +160,8 @@ public class DiagnosisDetailService {
 
         // 5) 결과 타입 엔티티 조회 후 세션에 저장
         TastingNoteType finalType = tastingNoteTypeRepository.findByCode(finalCodeStr)
-                .orElseThrow(() -> new DiagnosisException(DiagnosisErrorStatus._TYPE_NOT_FOUND));//타입 조회 실패
+                .orElseThrow(() -> new DiagnosisException(DiagnosisErrorStatus._TYPE_NOT_FOUND));
+        //타입 조회 실패 -> 결과는 잘 나왔는데 DB에 해당 타입이 없음 -> 서버문제
 
         // 이미 조회된 session 엔티티를 업데이트(더티체킹)
         session.updateType(finalType);

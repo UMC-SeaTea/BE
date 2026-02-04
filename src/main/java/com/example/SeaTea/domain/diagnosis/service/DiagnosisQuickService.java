@@ -46,7 +46,7 @@ public class DiagnosisQuickService {
         List<QuickKeyword> keywords = req.getKeywords();
         if (keywords == null || keywords.size() != 3) {
             throw new DiagnosisException(DiagnosisErrorStatus._INVALID_STEP);
-        }//잘못된 진단단계 예외
+        } //키워드 중간에 null이 들어감
 
         // 2) 응답 저장 (KW01~KW03)
         List<DiagnosisResponse> responses =
@@ -77,7 +77,7 @@ public class DiagnosisQuickService {
                 tastingNoteTypeRepository.findByCode(resultCode.name())
                         .orElseThrow(() ->
                                 new DiagnosisException(DiagnosisErrorStatus._TYPE_NOT_FOUND)
-                        );//타입 조회 실패
+                        );//타입 조회 실패 -> 결과는 잘 나왔는데 DB에 해당 타입이 없음 -> 서버문제
 
         session.updateType(typeEntity);
 

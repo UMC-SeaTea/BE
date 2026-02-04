@@ -25,13 +25,13 @@ public class DiagnosisQuickConverter {
         if (session == null) {
             throw new DiagnosisException(
                 DiagnosisErrorStatus._INVALID_STEP
-            );
+            );//세션이 비어있는데 컨버터 호출
         }
 
         if (keywords == null || keywords.isEmpty()) {
             throw new DiagnosisException(
                 DiagnosisErrorStatus._INVALID_STEP
-            );
+            );//키워드를 아예 안보냄
         }
 
         List<DiagnosisResponse> responses = new ArrayList<>();
@@ -41,7 +41,7 @@ public class DiagnosisQuickConverter {
             if (keyword == null) {
                 throw new DiagnosisException(
                     DiagnosisErrorStatus._INVALID_STEP
-                );
+                );//키워드 중간에 null이 껴 있음.
             }
 
             responses.add(
