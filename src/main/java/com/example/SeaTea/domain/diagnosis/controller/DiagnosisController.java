@@ -12,6 +12,8 @@ import com.example.SeaTea.domain.diagnosis.service.DiagnosisResultService;
 import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
+import com.example.SeaTea.global.exception.GeneralException;
+import com.example.SeaTea.global.status.ErrorStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +30,11 @@ public class DiagnosisController {
     private final DiagnosisQuickService diagnosisQuickService;
     private final DiagnosisResultService diagnosisResultService;
 
+    private Member findMemberOrThrow(Long memberId) {
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._BAD_REQUEST));
+    }
+
     // 임시 테스트용: memberId로 멤버 조회 후 진단 제출
     @PostMapping("/detail/test")
     public ApiResponse<DiagnosisDetailResponseDTO> submitDetailDiagnosisTest(
@@ -35,9 +42,7 @@ public class DiagnosisController {
             @RequestBody @Valid DiagnosisDetailRequestDTO req
     ) {
         System.out.println(">>> diagnosis detail test called"); //호출 확인용
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("member not found: " + memberId));
-        //없는 멤버면 에러
+        Member member = findMemberOrThrow(memberId);
 
         return ApiResponse.onSuccess(diagnosisDetailService.submitDetailDiagnosis(member, req));
         //성공이면 200 OK, DTO를 JSON으로 반환
@@ -51,8 +56,7 @@ public class DiagnosisController {
     ) {
         System.out.println(">>> diagnosis quick test called"); // 호출 확인용
 
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("member not found: " + memberId));
+        Member member = findMemberOrThrow(memberId);
 
         return ApiResponse.onSuccess(diagnosisQuickService.submitQuickDiagnosis(member, req));
     }
@@ -79,8 +83,7 @@ public class DiagnosisController {
     public ApiResponse<DiagnosisResultResponseDTO> getMyDiagnosisResultTest(
             @RequestParam Long memberId
     ) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("member not found: " + memberId));
+        Member member = findMemberOrThrow(memberId);
         return ApiResponse.onSuccess(diagnosisResultService.getMyLatestResult(member));
     }
 
@@ -88,8 +91,7 @@ public class DiagnosisController {
     public ApiResponse<List<DiagnosisHistoryResponseDTO>> getMyDiagnosisHistoryTest(
             @RequestParam Long memberId
     ) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("member not found: " + memberId));
+        Member member = findMemberOrThrow(memberId);
         return ApiResponse.onSuccess(diagnosisResultService.getMyHistory(member));
     }
 

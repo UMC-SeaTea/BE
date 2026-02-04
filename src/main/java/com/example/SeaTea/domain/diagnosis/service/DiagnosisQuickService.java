@@ -9,6 +9,8 @@ import com.example.SeaTea.domain.diagnosis.entity.TastingNoteType;
 import com.example.SeaTea.domain.diagnosis.enums.Mode;
 import com.example.SeaTea.domain.diagnosis.enums.QuickKeyword;
 import com.example.SeaTea.domain.diagnosis.enums.TastingNoteTypeCode;
+import com.example.SeaTea.domain.diagnosis.exception.DiagnosisException;
+import com.example.SeaTea.domain.diagnosis.exception.DiagnosisErrorStatus;
 import com.example.SeaTea.domain.diagnosis.repository.DiagnosisResponseRepository;
 import com.example.SeaTea.domain.diagnosis.repository.DiagnosisSessionRepository;
 import com.example.SeaTea.domain.diagnosis.repository.TastingNoteTypeRepository;
@@ -42,6 +44,9 @@ public class DiagnosisQuickService {
         diagnosisSessionRepository.save(session);
 
         List<QuickKeyword> keywords = req.getKeywords();
+        if (keywords == null || keywords.size() != 3) {
+            throw new DiagnosisException(DiagnosisErrorStatus._INVALID_STEP);
+        }//잘못된 진단단계 예외
 
         // 2) 응답 저장 (KW01~KW03)
         List<DiagnosisResponse> responses =
@@ -71,8 +76,8 @@ public class DiagnosisQuickService {
         TastingNoteType typeEntity =
                 tastingNoteTypeRepository.findByCode(resultCode.name())
                         .orElseThrow(() ->
-                                new IllegalStateException("TastingNoteType not found: " + resultCode)
-                        );
+                                new DiagnosisException(DiagnosisErrorStatus._TYPE_NOT_FOUND)
+                        );//타입 조회 실패
 
         session.updateType(typeEntity);
 

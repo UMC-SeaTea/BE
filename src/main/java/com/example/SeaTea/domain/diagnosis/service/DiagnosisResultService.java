@@ -4,6 +4,8 @@ import com.example.SeaTea.domain.diagnosis.dto.response.DiagnosisHistoryResponse
 import com.example.SeaTea.domain.diagnosis.dto.response.DiagnosisResultResponseDTO;
 import com.example.SeaTea.domain.diagnosis.entity.DiagnosisSession;
 import com.example.SeaTea.domain.diagnosis.entity.TastingNoteType;
+import com.example.SeaTea.domain.diagnosis.exception.DiagnosisException;
+import com.example.SeaTea.domain.diagnosis.exception.DiagnosisErrorStatus;
 import com.example.SeaTea.domain.diagnosis.repository.DiagnosisSessionRepository;
 import com.example.SeaTea.domain.member.entity.Member;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +25,11 @@ public class DiagnosisResultService {
     public DiagnosisResultResponseDTO getMyLatestResult(Member member) {
         DiagnosisSession latest = diagnosisSessionRepository
                 .findTopByMemberAndTypeIsNotNullOrderByCreatedAtDesc(member)
-                .orElseThrow(() -> new IllegalStateException("완료된 진단 결과가 없습니다. memberId=" + member.getId()));
+                .orElseThrow(() -> new DiagnosisException(DiagnosisErrorStatus._NO_COMPLETED_DIAGNOSIS));
+
+        if (latest.getType() == null) {
+            throw new DiagnosisException(DiagnosisErrorStatus._TYPE_NOT_FOUND);
+        }
 
         TastingNoteType type = latest.getType(); // type != null 보장
         return DiagnosisResultResponseDTO.from(type);
@@ -33,6 +39,10 @@ public class DiagnosisResultService {
     public List<DiagnosisHistoryResponseDTO> getMyHistory(Member member) {
         List<DiagnosisSession> sessions = diagnosisSessionRepository
                 .findByMemberAndTypeIsNotNullOrderByCreatedAtDesc(member);
+
+        if (sessions.isEmpty()) {
+            throw new DiagnosisException(DiagnosisErrorStatus._NO_COMPLETED_DIAGNOSIS);
+        }
 
         return sessions.stream()
                 .map(DiagnosisHistoryResponseDTO::from)

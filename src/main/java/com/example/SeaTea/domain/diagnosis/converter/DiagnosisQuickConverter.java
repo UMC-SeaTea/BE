@@ -5,6 +5,8 @@ import com.example.SeaTea.domain.diagnosis.entity.DiagnosisResponse;
 import com.example.SeaTea.domain.diagnosis.entity.DiagnosisSession;
 import com.example.SeaTea.domain.diagnosis.enums.QuickKeyword;
 import com.example.SeaTea.domain.diagnosis.enums.TastingNoteTypeCode;
+import com.example.SeaTea.domain.diagnosis.exception.DiagnosisException;
+import com.example.SeaTea.domain.diagnosis.exception.DiagnosisErrorStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,15 +22,27 @@ public class DiagnosisQuickConverter {
             DiagnosisSession session,
             List<QuickKeyword> keywords
     ) {
-        List<DiagnosisResponse> responses = new ArrayList<>();
+        if (session == null) {
+            throw new DiagnosisException(
+                DiagnosisErrorStatus._INVALID_STEP
+            );
+        }
 
         if (keywords == null || keywords.isEmpty()) {
-            return responses;
+            throw new DiagnosisException(
+                DiagnosisErrorStatus._INVALID_STEP
+            );
         }
+
+        List<DiagnosisResponse> responses = new ArrayList<>();
 
         for (int i = 0; i < keywords.size(); i++) {
             QuickKeyword keyword = keywords.get(i);
-            if (keyword == null) continue;
+            if (keyword == null) {
+                throw new DiagnosisException(
+                    DiagnosisErrorStatus._INVALID_STEP
+                );
+            }
 
             responses.add(
                     DiagnosisResponse.builder()

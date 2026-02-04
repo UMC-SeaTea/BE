@@ -16,8 +16,8 @@ import com.example.SeaTea.domain.diagnosis.scoring.DiagnosisResultDecider;
 import com.example.SeaTea.domain.diagnosis.scoring.DiagnosisStep1;
 import com.example.SeaTea.domain.diagnosis.scoring.DiagnosisStep2;
 import com.example.SeaTea.domain.member.entity.Member;
-import com.example.SeaTea.global.exception.GeneralException;
-import com.example.SeaTea.global.status.ErrorStatus;
+import com.example.SeaTea.domain.diagnosis.exception.DiagnosisException;
+import com.example.SeaTea.domain.diagnosis.exception.DiagnosisErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -49,8 +49,8 @@ public class DiagnosisDetailService {
      */
     public DiagnosisDetailResponseDTO submitDetailDiagnosis(Member member, DiagnosisDetailRequestDTO req) {
 
-        if (req.getStep() == null) {
-            throw new GeneralException(ErrorStatus._BAD_REQUEST);
+        if (req.getStep() == null || (req.getStep() != 1 && req.getStep() != 2)) {
+            throw new DiagnosisException(DiagnosisErrorStatus._INVALID_STEP); //step이 null,1,2가 아니면 예외
         }
 
         // =========================
@@ -102,8 +102,7 @@ public class DiagnosisDetailService {
 
             // 6-1) 결과 코드로 결과 타입 엔티티 조회
             TastingNoteType typeEntity = tastingNoteTypeRepository.findByCode(typeCodeStr)
-                    // NOTE: 현재 ErrorStatus에 NOT_FOUND가 없어서 BAD_REQUEST로 처리 (원하면 NOT_FOUND 추가 권장)
-                    .orElseThrow(() -> new GeneralException(ErrorStatus._BAD_REQUEST));
+                    .orElseThrow(() -> new DiagnosisException(DiagnosisErrorStatus._TYPE_NOT_FOUND));// 타입 조회 실패
 
             // 이미 영속 상태인 session 엔티티를 업데이트(더티체킹)
             session.updateType(typeEntity);
@@ -120,13 +119,13 @@ public class DiagnosisDetailService {
         // STEP 2
         // =========================
         if (req.getSessionId() == null) {
-            throw new GeneralException(ErrorStatus._BAD_REQUEST);
+            throw new DiagnosisException(DiagnosisErrorStatus._INVALID_STEP);//nul,1,2가 아니면 예외
         }
 
         // 1) 세션 조회 및 소유자 검증
         DiagnosisSession session = diagnosisSessionRepository
                 .findByIdAndMemberId(req.getSessionId(), member.getId())
-                .orElseThrow(() -> new GeneralException(ErrorStatus._BAD_REQUEST));
+                .orElseThrow(() -> new DiagnosisException(DiagnosisErrorStatus._SESSION_NOT_FOUND));//세션 id 없음.
 
         // 2) Step2 응답 저장 (DTO → Entity 변환은 Converter 담당)
         List<DiagnosisResponse> step2Responses = DiagnosisDetailConverter.fromStep2(session, req);
@@ -161,7 +160,7 @@ public class DiagnosisDetailService {
 
         // 5) 결과 타입 엔티티 조회 후 세션에 저장
         TastingNoteType finalType = tastingNoteTypeRepository.findByCode(finalCodeStr)
-                .orElseThrow(() -> new GeneralException(ErrorStatus._BAD_REQUEST));
+                .orElseThrow(() -> new DiagnosisException(DiagnosisErrorStatus._TYPE_NOT_FOUND));//타입 조회 실패
 
         // 이미 조회된 session 엔티티를 업데이트(더티체킹)
         session.updateType(finalType);
