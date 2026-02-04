@@ -17,8 +17,10 @@ import com.example.SeaTea.global.status.ErrorStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 
 @RestController
 @RequiredArgsConstructor
@@ -79,6 +81,7 @@ public class DiagnosisController {
 //        return ApiResponse.onSuccess(diagnosisQuickService.submitQuickDiagnosis(member, req));
 //    }
 
+    //내 최신 진단 조회
     @GetMapping("/me/test")
     public ApiResponse<DiagnosisResultResponseDTO> getMyDiagnosisResultTest(
             @RequestParam Long memberId
@@ -87,12 +90,22 @@ public class DiagnosisController {
         return ApiResponse.onSuccess(diagnosisResultService.getMyLatestResult(member));
     }
 
+    //과거 진단내역 조회 (슬라이스로 페이징)
     @GetMapping("/me/history/test")
-    public ApiResponse<List<DiagnosisHistoryResponseDTO>> getMyDiagnosisHistoryTest(
-            @RequestParam Long memberId
+    public ApiResponse<Slice<DiagnosisHistoryResponseDTO>> getMyDiagnosisHistoryTest(
+            @RequestParam Long memberId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
         Member member = findMemberOrThrow(memberId);
-        return ApiResponse.onSuccess(diagnosisResultService.getMyHistory(member));
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        return ApiResponse.onSuccess(diagnosisResultService.getMyHistory(member, pageable));
     }
 
     //나중에 인증붙으면 교체
@@ -104,9 +117,16 @@ public class DiagnosisController {
     // }
     //
     // @GetMapping("/me/history")
-    // public ApiResponse<List<DiagnosisHistoryResponseDTO>> getMyDiagnosisHistory(
-    //         @AuthenticationPrincipal Member member
+    // public ApiResponse<Slice<DiagnosisHistoryResponseDTO>> getMyDiagnosisHistory(
+    //         @AuthenticationPrincipal Member member,
+    //         @RequestParam(defaultValue = "0") int page,
+    //         @RequestParam(defaultValue = "10") int size
     // ) {
-    //     return ApiResponse.onSuccess(diagnosisResultService.getMyHistory(member));
+    //     Pageable pageable = PageRequest.of(
+    //             page,
+    //             size,
+    //             Sort.by(Sort.Direction.DESC, "createdAt")
+    //     );
+    //     return ApiResponse.onSuccess(diagnosisResultService.getMyHistory(member, pageable));
     // }
 }

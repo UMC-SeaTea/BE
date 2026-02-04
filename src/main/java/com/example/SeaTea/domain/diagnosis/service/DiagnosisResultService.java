@@ -9,6 +9,8 @@ import com.example.SeaTea.domain.diagnosis.exception.DiagnosisErrorStatus;
 import com.example.SeaTea.domain.diagnosis.repository.DiagnosisSessionRepository;
 import com.example.SeaTea.domain.member.entity.Member;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,17 +37,18 @@ public class DiagnosisResultService {
         return DiagnosisResultResponseDTO.from(type);
     }
 
-    // 나의 진단 결과 히스토리(완료된 세션 전체)
-    public List<DiagnosisHistoryResponseDTO> getMyHistory(Member member) {
-        List<DiagnosisSession> sessions = diagnosisSessionRepository
-                .findByMemberAndTypeIsNotNullOrderByCreatedAtDesc(member);
+    // 나의 진단 결과 히스토리(완료된 세션 전체) (슬라이스)
+    @Transactional(readOnly = true)
+    public Slice<DiagnosisHistoryResponseDTO> getMyHistory(
+            Member member,
+            Pageable pageable
+    ) {
+        Slice<DiagnosisSession> slice =
+                diagnosisSessionRepository.findByMemberAndTypeIsNotNullOrderByCreatedAtDesc(
+                        member,
+                        pageable
+                );
 
-        if (sessions.isEmpty()) {
-            throw new DiagnosisException(DiagnosisErrorStatus._NO_COMPLETED_DIAGNOSIS);
-        }
-
-        return sessions.stream()
-                .map(DiagnosisHistoryResponseDTO::from)
-                .toList();
+        return slice.map(DiagnosisHistoryResponseDTO::from);
     }
 }
