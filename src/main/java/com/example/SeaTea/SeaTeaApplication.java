@@ -10,9 +10,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @EnableJpaAuditing
 @SpringBootApplication
 public class SeaTeaApplication {
-
-	public static void main(String[] args) {
-		SpringApplication.run(SeaTeaApplication.class, args);
-	}
-
+    public static void main(String[] args) {
+        SpringApplication.run(SeaTeaApplication.class, args);
+    }
 }
