@@ -22,13 +22,14 @@ public class MemberCommandServiceImpl implements MemberCommandService {
   @Override
   @Transactional
   public MemberResDTO.JoinDTO signup(
-      MemberReqDTO.JoinDTO dto
+      MemberReqDTO.JoinDTO dto,
+      MemberReqDTO.ProfileDTO profDto
   ){
     // 솔트된 비밀번호 생성(salt+hash가 합쳐진 비밀번호 문자열)
     String salt = passwordEncoder.encode(dto.password());
 
     // 사용자 생성
-    Member member = MemberConverter.toMember(dto, salt, Role.ROLE_MEMBER);
+    Member member = MemberConverter.toMember(dto, salt, Role.ROLE_MEMBER, profDto);
     // DB 적용
     memberRepository.save(member);
 

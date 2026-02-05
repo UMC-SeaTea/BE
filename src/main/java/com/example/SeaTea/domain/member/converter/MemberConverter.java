@@ -17,18 +17,29 @@ public class MemberConverter {
         .build();
   }
 
+  //프로필 설정 결과 응답 DTO 변환
+  public static MemberResDTO.JoinDTO toProfileResultDTO(
+      Member member
+  ){
+    return MemberResDTO.JoinDTO.builder()
+        .id(member.getId())
+        .createdAt(member.getCreatedAt())
+        .build();
+  }
+
   // DTO -> Entity
   public static Member toMember(
       MemberReqDTO.JoinDTO dto,
       String password,
-      Role role
+      Role role,
+      MemberReqDTO.ProfileDTO profDto
   ){
     return Member.builder()
         .email(dto.email())
         .password(password)
         .role(role)
-        .nickname(dto.nickname())
-        .profile_image(dto.profile_image())
+        .nickname(profDto.nickname())
+//        .profile_image(profDto.profile_image())
         .build();
   }
 

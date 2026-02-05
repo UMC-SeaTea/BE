@@ -22,14 +22,17 @@ public class SecurityConfig {
   private final CustomFailureHandler customFailureHandler;
   private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
 
-
   private final String[] allowUris = {
       // Swagger 허용
       "/login",
-      "/sign-up",
+      "/api/sign-up",
       "/swagger-ui/**",
       "/swagger-resources/**",
       "/v3/api-docs/**",
+      "/error",
+
+      // 콘솔 로그에 favicon 제거
+      "/favicon.ico"
   };
 
   @Bean
@@ -37,7 +40,7 @@ public class SecurityConfig {
     http
         .authorizeHttpRequests(requests -> requests
             .requestMatchers(allowUris).permitAll()
-            .requestMatchers("/admin/**").hasRole("ADMIN")
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")
             .anyRequest().authenticated()
         )
         .formLogin(form -> form
@@ -46,8 +49,8 @@ public class SecurityConfig {
                 .passwordParameter("password")
                 .successHandler(customSuccessHandler)
                 .failureHandler(customFailureHandler)
+                .permitAll()
 //                .defaultSuccessUrl("/swagger-ui/index.html", true)
-//            .permitAll()
         )
 //        csrf 비활성화
         .csrf(AbstractHttpConfigurer::disable)
@@ -65,6 +68,7 @@ public class SecurityConfig {
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
+
 
   // ********* 관리자 페이지 테스트
 //  private final String[] allowUris = {

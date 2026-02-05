@@ -30,6 +30,8 @@ public class CustomFailureHandler implements AuthenticationFailureHandler {
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     response.setCharacterEncoding("UTF-8");
 
+    System.out.println("로그인 실패 이유: " + exception.getMessage());
+
     objectMapper.writeValue(
         response.getWriter(),
         ApiResponse.onFailure("COMMON404","로그인에 실패했습니다(인증 실패 / 아이디 비번 불일치)", MemberErrorCode.LOGIN_FAILED)
