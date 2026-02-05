@@ -42,6 +42,7 @@ public class Member extends BaseEntity {
 
 //  role 인가처리
   @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
   private Role role; // USER, ADMIN
 
 //  status 탈퇴/차단 처리

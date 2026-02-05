@@ -13,7 +13,7 @@ import jakarta.persistence.ManyToOne;
 public class MemberAuth extends BaseEntity {
   @Id
   @GeneratedValue
-  private long id;
+  private Long id;
 
 //  JoinColumn -> FK의 주인 설정 / 단방향 1:N 매핑
   @ManyToOne(fetch = FetchType.LAZY)

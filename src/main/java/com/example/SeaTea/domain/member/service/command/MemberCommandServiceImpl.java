@@ -30,6 +30,8 @@ public class MemberCommandServiceImpl implements MemberCommandService {
     }
     // 이메일 중복 재확인 (보안상 한 번 더 체크)
     checkEmailDuplication(dto.email());
+    // 닉네임도 중복 확인
+    checkNicknameDuplication(dto.nickname());
 
     // 솔트된 비밀번호 생성(salt+hash가 합쳐진 비밀번호 문자열)
     String salt = passwordEncoder.encode(dto.password());
@@ -47,8 +49,8 @@ public class MemberCommandServiceImpl implements MemberCommandService {
   @Transactional(readOnly = true)
   public void checkEmailDuplication(String email) {
     if (memberRepository.existsByEmail(email)) {
-      // 커스텀 예외를 정의하여 사용하는 것을 추천합니다.
-      // 여기서는 예시로 RuntimeException을 사용합니다.
+
+      // 커스텀 예외를 정의해서 사용하기
       throw new RuntimeException("이미 사용 중인 이메일입니다.");
     }
   }
@@ -57,8 +59,8 @@ public class MemberCommandServiceImpl implements MemberCommandService {
   @Transactional(readOnly = true)
   public void checkNicknameDuplication(String nickname) {
     if (memberRepository.existsByNickname(nickname)) {
-      // 커스텀 예외를 정의하여 사용하는 것을 추천합니다.
-      // 여기서는 예시로 RuntimeException을 사용합니다.
+
+      // 커스텀 예외를 정의해서 사용하기
       throw new RuntimeException("이미 사용 중인 닉네임입니다.");
     }
   }

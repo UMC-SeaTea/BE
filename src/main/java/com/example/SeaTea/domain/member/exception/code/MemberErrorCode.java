@@ -17,8 +17,8 @@ public enum MemberErrorCode implements BaseErrorCode {
 
 
   private final HttpStatus httpStatus;
-  private final String message;
   private final String code;
+  private final String message;
 
   @Override
   public ErrorReasonDTO getReason() {

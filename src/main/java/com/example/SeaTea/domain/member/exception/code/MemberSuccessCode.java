@@ -15,20 +15,23 @@ public enum MemberSuccessCode implements BaseCode {
       "MEMBER200_1",
       "성공적으로 사용자를 조회했습니다."),
   LOGIN_SUCCESS(HttpStatus.OK,
-      "MEMBER200_1",
-      "성공적으로 로그인하였습니다.")
+      "MEMBER200_2",
+      "성공적으로 로그인하였습니다."),
+  CREATED(HttpStatus.OK,
+      "MEMBER200_3",
+      "회원가입에 성공하였습니다.")
   ;
 
   private HttpStatus httpStatus;
-  private String message;
   private String code;
+  private String message;
 
   @Override
   public ReasonDTO getReason() {
     return ReasonDTO.builder()
         .message(message)
         .code(code)
-        .isSuccess(false)
+        .isSuccess(true)
         .build();
   }
 
@@ -37,7 +40,7 @@ public enum MemberSuccessCode implements BaseCode {
     return ReasonDTO.builder()
         .message(message)
         .code(code)
-        .isSuccess(false)
+        .isSuccess(true)
         .httpStatus(httpStatus)
         .build();
   }

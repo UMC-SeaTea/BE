@@ -10,6 +10,7 @@ import com.example.SeaTea.domain.member.service.query.MemberQueryService;
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
 import com.example.SeaTea.global.auth.CustomUserDetails;
 import com.example.SeaTea.global.status.SuccessStatus;
+import jakarta.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -39,9 +40,9 @@ public class MemberController {
 
   @PostMapping("/sign-up")
   public ApiResponse<MemberResDTO.JoinDTO> signup(
-      @RequestBody MemberReqDTO.JoinDTO dto
+      @RequestBody @Valid MemberReqDTO.JoinDTO dto
   ) {
-    return ApiResponse.of(MemberSuccessCode.FOUND, memberCommandService.signup(dto));
+    return ApiResponse.of(MemberSuccessCode.CREATED, memberCommandService.signup(dto));
   }
 
 

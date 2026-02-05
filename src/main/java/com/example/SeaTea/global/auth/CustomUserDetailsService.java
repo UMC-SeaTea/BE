@@ -22,7 +22,8 @@ public class CustomUserDetailsService implements UserDetailsService {
   ) throws UsernameNotFoundException {
     // 검증할 Member 조회
     Member member = memberRepository.findByEmail(username)
-        .orElseThrow(() -> new MemberException(MemberErrorCode.NOT_FOUND));
+        .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + username));
+//        .orElseThrow(() -> new MemberException(MemberErrorCode.NOT_FOUND));
     // CustomUserDetails 반환
     return new CustomUserDetails(member);
   }

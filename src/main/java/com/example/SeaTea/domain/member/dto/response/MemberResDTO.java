@@ -18,7 +18,8 @@ public class MemberResDTO {
   public record LoginDTO(
       Long id,
       String email,
-      String password,
+      // 보안을 위해 비밀번호 포함 X
+//      String password,
       String role,
       String profile_image
   ){}
