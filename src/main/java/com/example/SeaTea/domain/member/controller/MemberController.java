@@ -31,13 +31,32 @@ public class MemberController {
   private final MemberQueryService memberQueryService;
   private final MemberCommandService memberCommandService;
 
+  // 1. 회원가입 정보 입력 페이지
+  @GetMapping("/sign-up")
+  public String signUpForm() {
+    return "/api/sign-up";
+  }
+
   @PostMapping("/sign-up")
   public ApiResponse<MemberResDTO.JoinDTO> signup(
-      @RequestBody MemberReqDTO.JoinDTO dto,
-      @RequestBody MemberReqDTO.ProfileDTO profDto
+      @RequestBody MemberReqDTO.JoinDTO dto
   ) {
-    return ApiResponse.of(MemberSuccessCode.FOUND, memberCommandService.signup(dto, profDto));
+    return ApiResponse.of(MemberSuccessCode.FOUND, memberCommandService.signup(dto));
   }
+
+
+  // ******** 중복체크
+  @GetMapping("/check-email")
+  public ApiResponse<String> checkEmail(@RequestParam String email) {
+    memberCommandService.checkEmailDuplication(email);
+    return ApiResponse.onSuccess("사용 가능한 이메일입니다.");
+  }
+  @GetMapping("/check-nickname")
+  public ApiResponse<String> checkNickname(@RequestParam String nickname) {
+    memberCommandService.checkNicknameDuplication(nickname);
+    return ApiResponse.onSuccess("사용 가능한 닉네임입니다.");
+  }
+
 
   @GetMapping("/users/me")
   public ResponseEntity<?> getMyInfo(@AuthenticationPrincipal CustomUserDetails customUserDetails) {

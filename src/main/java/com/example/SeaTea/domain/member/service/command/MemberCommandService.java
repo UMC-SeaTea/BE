@@ -6,9 +6,9 @@ import com.example.SeaTea.domain.member.dto.response.MemberResDTO;
 public interface MemberCommandService {
 
   MemberResDTO.JoinDTO signup(
-      MemberReqDTO.JoinDTO dto,
-      MemberReqDTO.ProfileDTO profDto
+      MemberReqDTO.JoinDTO dto
   );
 
-
+  void checkEmailDuplication(String email);
+  void checkNicknameDuplication(String nickname);
 }
