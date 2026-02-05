@@ -1,5 +1,7 @@
 package com.example.SeaTea.domain.diagnosis.converter;
 
+import com.example.SeaTea.domain.diagnosis.exception.DiagnosisException;
+import com.example.SeaTea.domain.diagnosis.exception.DiagnosisErrorStatus;
 import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisDetailRequestDTO;
 import com.example.SeaTea.domain.diagnosis.entity.DiagnosisResponse;
 import com.example.SeaTea.domain.diagnosis.entity.DiagnosisSession;
@@ -81,8 +83,8 @@ public class DiagnosisDetailConverter {
 
         // Step1 응답 누락은 데이터 정합성 문제이므로 요청 오류로 처리
         if (q1 == null || q2 == null || q3 == null || q4 == null || q4.isEmpty()) {
-            throw new IllegalArgumentException("Step1 answers are missing for this session.");
-        }
+            throw new DiagnosisException(DiagnosisErrorStatus._INVALID_STEP);
+        } //즉, step2요청이 들어왔을 때, DB에 step1 응답이 하나라도 누락되어 있으면 예외발생.
 
         return new Step1Answers(q1, q2, q3, q4);
     }

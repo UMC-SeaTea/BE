@@ -5,6 +5,8 @@ import com.example.SeaTea.domain.diagnosis.entity.DiagnosisResponse;
 import com.example.SeaTea.domain.diagnosis.entity.DiagnosisSession;
 import com.example.SeaTea.domain.diagnosis.enums.QuickKeyword;
 import com.example.SeaTea.domain.diagnosis.enums.TastingNoteTypeCode;
+import com.example.SeaTea.domain.diagnosis.exception.DiagnosisException;
+import com.example.SeaTea.domain.diagnosis.exception.DiagnosisErrorStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,15 +22,27 @@ public class DiagnosisQuickConverter {
             DiagnosisSession session,
             List<QuickKeyword> keywords
     ) {
-        List<DiagnosisResponse> responses = new ArrayList<>();
+        if (session == null) {
+            throw new DiagnosisException(
+                DiagnosisErrorStatus._INVALID_STEP
+            );//세션이 비어있는데 컨버터 호출
+        }
 
         if (keywords == null || keywords.isEmpty()) {
-            return responses;
+            throw new DiagnosisException(
+                DiagnosisErrorStatus._INVALID_STEP
+            );//키워드를 아예 안보냄
         }
+
+        List<DiagnosisResponse> responses = new ArrayList<>();
 
         for (int i = 0; i < keywords.size(); i++) {
             QuickKeyword keyword = keywords.get(i);
-            if (keyword == null) continue;
+            if (keyword == null) {
+                throw new DiagnosisException(
+                    DiagnosisErrorStatus._INVALID_STEP
+                );//키워드 중간에 null이 껴 있음.
+            }
 
             responses.add(
                     DiagnosisResponse.builder()
