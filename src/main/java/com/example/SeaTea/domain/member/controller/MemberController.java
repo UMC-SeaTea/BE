@@ -32,7 +32,7 @@ public class MemberController {
   private final MemberQueryService memberQueryService;
   private final MemberCommandService memberCommandService;
 
-  // 1. 회원가입 정보 입력 페이지
+  // 회원가입 정보 입력 페이지
   @GetMapping("/sign-up")
   public String signUpForm() {
     return "/api/sign-up";
@@ -42,21 +42,21 @@ public class MemberController {
   public ApiResponse<MemberResDTO.JoinDTO> signup(
       @RequestBody @Valid MemberReqDTO.JoinDTO dto
   ) {
-    return ApiResponse.of(MemberSuccessCode.CREATED, memberCommandService.signup(dto));
+    return ApiResponse.of(MemberSuccessCode._CREATED, memberCommandService.signup(dto));
   }
 
 
   // ******** 중복체크
-  @GetMapping("/check-email")
-  public ApiResponse<String> checkEmail(@RequestParam String email) {
-    memberCommandService.checkEmailDuplication(email);
-    return ApiResponse.onSuccess("사용 가능한 이메일입니다.");
-  }
-  @GetMapping("/check-nickname")
-  public ApiResponse<String> checkNickname(@RequestParam String nickname) {
-    memberCommandService.checkNicknameDuplication(nickname);
-    return ApiResponse.onSuccess("사용 가능한 닉네임입니다.");
-  }
+//  @GetMapping("/check/email")
+//  public ApiResponse<String> checkEmail(@RequestParam String email) {
+//    memberCommandService.checkEmailDuplication(email);
+//    return ApiResponse.onSuccess("사용 가능한 이메일입니다.");
+//  }
+//  @GetMapping("/check/nickname")
+//  public ApiResponse<String> checkNickname(@RequestParam String nickname) {
+//    memberCommandService.checkNicknameDuplication(nickname);
+//    return ApiResponse.onSuccess("사용 가능한 닉네임입니다.");
+//  }
 
 
   @GetMapping("/users/me")
@@ -88,14 +88,14 @@ public class MemberController {
   }
 
   // 예외 상황
-  @GetMapping("/exception")
-  public ApiResponse<MemberResDTO.Exceptions> exception(
-      @RequestParam Long flag
-  ) {
-    memberQueryService.checkFlag(flag);
-
-    // 응답 코드 정의
-    SuccessStatus code = SuccessStatus._OK;
-    return ApiResponse.onSuccess(MemberConverter.toExceptionsDTO("I'm testing"));
-  }
+//  @GetMapping("/exception")
+//  public ApiResponse<MemberResDTO.Exceptions> exception(
+//      @RequestParam Long flag
+//  ) {
+//    memberQueryService.checkFlag(flag);
+//
+//    // 응답 코드 정의
+//    SuccessStatus code = SuccessStatus._OK;
+//    return ApiResponse.onSuccess(MemberConverter.toExceptionsDTO("I'm testing"));
+//  }
 }

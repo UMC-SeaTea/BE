@@ -4,6 +4,8 @@ import com.example.SeaTea.domain.member.converter.MemberConverter;
 import com.example.SeaTea.domain.member.dto.request.MemberReqDTO;
 import com.example.SeaTea.domain.member.dto.response.MemberResDTO;
 import com.example.SeaTea.domain.member.entity.Member;
+import com.example.SeaTea.domain.member.exception.MemberException;
+import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
 import com.example.SeaTea.global.auth.enums.Role;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +28,7 @@ public class MemberCommandServiceImpl implements MemberCommandService {
   ){
     // 비밀번호 일치 확인
     if (!dto.password().equals(dto.passwordConfirm())) {
-      throw new RuntimeException("비밀번호가 일치하지 않습니다.");
+      throw new MemberException(MemberErrorCode._DIFFERENT_PW);
     }
     // 이메일 중복 재확인 (보안상 한 번 더 체크)
     checkEmailDuplication(dto.email());
@@ -50,8 +52,7 @@ public class MemberCommandServiceImpl implements MemberCommandService {
   public void checkEmailDuplication(String email) {
     if (memberRepository.existsByEmail(email)) {
 
-      // 커스텀 예외를 정의해서 사용하기
-      throw new RuntimeException("이미 사용 중인 이메일입니다.");
+      throw new MemberException(MemberErrorCode._CONFLICT_EMAIL);
     }
   }
 
@@ -60,8 +61,7 @@ public class MemberCommandServiceImpl implements MemberCommandService {
   public void checkNicknameDuplication(String nickname) {
     if (memberRepository.existsByNickname(nickname)) {
 
-      // 커스텀 예외를 정의해서 사용하기
-      throw new RuntimeException("이미 사용 중인 닉네임입니다.");
+      throw new MemberException(MemberErrorCode._CONFLICT_NICKNAME);
     }
   }
 
