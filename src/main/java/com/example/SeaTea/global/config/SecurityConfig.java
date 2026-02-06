@@ -31,6 +31,9 @@ public class SecurityConfig {
       "/v3/api-docs/**",
       "/error",
 
+      //Diagnosis 테스트용 (로그인 전)
+      "/api/test/**",
+
       // 콘솔 로그에 favicon 제거
       "/favicon.ico"
   };

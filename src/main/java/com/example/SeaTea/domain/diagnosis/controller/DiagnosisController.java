@@ -16,6 +16,7 @@ import com.example.SeaTea.global.exception.GeneralException;
 import com.example.SeaTea.global.status.ErrorStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +25,7 @@ import org.springframework.data.domain.Sort;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/diagnosis")
+@RequestMapping("/api")
 public class DiagnosisController {
 
     private final DiagnosisDetailService diagnosisDetailService;
@@ -37,8 +38,52 @@ public class DiagnosisController {
                 .orElseThrow(() -> new GeneralException(ErrorStatus._BAD_REQUEST));
     }
 
+    //상세 진단
+    @PostMapping("/diagnosis/detail")
+    public ApiResponse<DiagnosisDetailResponseDTO> submitDetailDiagnosis(
+            @AuthenticationPrincipal Member member,
+            @RequestBody @Valid DiagnosisDetailRequestDTO req
+    ) {
+        return ApiResponse.onSuccess(diagnosisDetailService.submitDetailDiagnosis(member, req));
+    }
+
+    //간단 진단
+    @PostMapping("/diagnosis/quick")
+    public ApiResponse<DiagnosisQuickResponseDTO> submitQuickDiagnosis(
+            @AuthenticationPrincipal Member member,
+            @RequestBody @Valid DiagnosisQuickRequestDTO req
+    ) {
+        return ApiResponse.onSuccess(diagnosisQuickService.submitQuickDiagnosis(member, req));
+    }
+
+
+    //최신 진단결과 조회
+    @GetMapping("/diagnosis/me")
+    public ApiResponse<DiagnosisResultResponseDTO> getMyDiagnosisResult(
+            @AuthenticationPrincipal Member member
+    ) {
+        return ApiResponse.onSuccess(diagnosisResultService.getMyLatestResult(member));
+    }
+
+    //과거 진단이력 조회
+    @GetMapping("/diagnosis/me/history")
+    public ApiResponse<Slice<DiagnosisHistoryResponseDTO>> getMyDiagnosisHistory(
+            @AuthenticationPrincipal Member member,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "3") int size
+    ) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+        return ApiResponse.onSuccess(diagnosisResultService.getMyHistory(member, pageable));
+    }
+
+    /// 포스트맨 테스트용 API : MemberId로 테스트
+
     // 임시 테스트용: memberId로 멤버 조회 후 진단 제출
-    @PostMapping("/detail/test")
+    @PostMapping("/test/diagnosis/detail")
     public ApiResponse<DiagnosisDetailResponseDTO> submitDetailDiagnosisTest(
             @RequestParam Long memberId,
             @RequestBody @Valid DiagnosisDetailRequestDTO req
@@ -51,7 +96,7 @@ public class DiagnosisController {
     }
 
     // 임시 테스트용: memberId로 멤버 조회 후 간단 진단 제출
-    @PostMapping("/quick/test")
+    @PostMapping("/test/diagnosis/quick")
     public ApiResponse<DiagnosisQuickResponseDTO> submitQuickDiagnosisTest(
             @RequestParam Long memberId,
             @RequestBody @Valid DiagnosisQuickRequestDTO req
@@ -63,26 +108,8 @@ public class DiagnosisController {
         return ApiResponse.onSuccess(diagnosisQuickService.submitQuickDiagnosis(member, req));
     }
 
-//    // 나중에 인증 붙이면 이거로 교체
-//    @PostMapping("/detail")
-//    public ApiResponse<DiagnosisDetailResponseDTO> submitDetailDiagnosis(
-//            @AuthenticationPrincipal Member member,
-//            @RequestBody @Valid DiagnosisDetailRequestDTO req
-//    ) {
-//        return ApiResponse.onSuccess(diagnosisDetailService.submitDetailDiagnosis(member, req));
-//    }
-
-//    // 나중에 인증 붙이면 이거로 교체
-//    @PostMapping("/quick")
-//    public ApiResponse<DiagnosisQuickResponseDTO> submitQuickDiagnosis(
-//            @AuthenticationPrincipal Member member,
-//            @RequestBody @Valid DiagnosisQuickRequestDTO req
-//    ) {
-//        return ApiResponse.onSuccess(diagnosisQuickService.submitQuickDiagnosis(member, req));
-//    }
-
-    //내 최신 진단 조회
-    @GetMapping("/me/test")
+    // 임시 테스트용: memberId로 멤버 조회 후 최신 이력
+    @GetMapping("/test/diagnosis/me")
     public ApiResponse<DiagnosisResultResponseDTO> getMyDiagnosisResultTest(
             @RequestParam Long memberId
     ) {
@@ -90,12 +117,12 @@ public class DiagnosisController {
         return ApiResponse.onSuccess(diagnosisResultService.getMyLatestResult(member));
     }
 
-    //과거 진단내역 조회 (슬라이스로 페이징)
-    @GetMapping("/me/history/test")
+    //임시 테스트용: memberId로 멤버 조회 후 과거 진단내역 조회 (슬라이스로 페이징)
+    @GetMapping("/test/diagnosis/me/history")
     public ApiResponse<Slice<DiagnosisHistoryResponseDTO>> getMyDiagnosisHistoryTest(
             @RequestParam Long memberId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "3") int size
     ) {
         Member member = findMemberOrThrow(memberId);
 
@@ -108,25 +135,4 @@ public class DiagnosisController {
         return ApiResponse.onSuccess(diagnosisResultService.getMyHistory(member, pageable));
     }
 
-    //나중에 인증붙으면 교체
-    // @GetMapping("/me")
-    // public ApiResponse<DiagnosisResultResponseDTO> getMyDiagnosisResult(
-    //         @AuthenticationPrincipal Member member
-    // ) {
-    //     return ApiResponse.onSuccess(diagnosisResultService.getMyLatestResult(member));
-    // }
-    //
-    // @GetMapping("/me/history")
-    // public ApiResponse<Slice<DiagnosisHistoryResponseDTO>> getMyDiagnosisHistory(
-    //         @AuthenticationPrincipal Member member,
-    //         @RequestParam(defaultValue = "0") int page,
-    //         @RequestParam(defaultValue = "10") int size
-    // ) {
-    //     Pageable pageable = PageRequest.of(
-    //             page,
-    //             size,
-    //             Sort.by(Sort.Direction.DESC, "createdAt")
-    //     );
-    //     return ApiResponse.onSuccess(diagnosisResultService.getMyHistory(member, pageable));
-    // }
 }
