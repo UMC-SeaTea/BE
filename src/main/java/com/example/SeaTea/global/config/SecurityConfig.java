@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @EnableWebSecurity
 @Configuration
@@ -21,6 +22,7 @@ public class SecurityConfig {
   private final CustomSuccessHandler customSuccessHandler;
   private final CustomFailureHandler customFailureHandler;
   private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
+  private final CorsConfigurationSource corsConfigurationSource;
 
   private final String[] allowUris = {
       // Swagger 허용
@@ -62,6 +64,9 @@ public class SecurityConfig {
                 .permitAll()
 //            .logoutSuccessUrl("/login?logout")
         );
+
+    // CORS 설정
+    http.cors(cors -> cors.configurationSource(corsConfigurationSource));
 
     return http.build();
   }
