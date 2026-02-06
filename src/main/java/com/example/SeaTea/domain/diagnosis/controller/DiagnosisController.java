@@ -12,6 +12,7 @@ import com.example.SeaTea.domain.diagnosis.service.DiagnosisResultService;
 import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
+import com.example.SeaTea.global.auth.CustomUserDetails;
 import com.example.SeaTea.global.exception.GeneralException;
 import com.example.SeaTea.global.status.ErrorStatus;
 import jakarta.validation.Valid;
@@ -41,18 +42,26 @@ public class DiagnosisController {
     //상세 진단
     @PostMapping("/diagnosis/detail")
     public ApiResponse<DiagnosisDetailResponseDTO> submitDetailDiagnosis(
-            @AuthenticationPrincipal Member member,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody @Valid DiagnosisDetailRequestDTO req
     ) {
+        if (customUserDetails == null) { //로그인안되면 COMMON401
+            throw new GeneralException(ErrorStatus._UNAUTHORIZED);
+        }
+        Member member = customUserDetails.getMember();
         return ApiResponse.onSuccess(diagnosisDetailService.submitDetailDiagnosis(member, req));
     }
 
     //간단 진단
     @PostMapping("/diagnosis/quick")
     public ApiResponse<DiagnosisQuickResponseDTO> submitQuickDiagnosis(
-            @AuthenticationPrincipal Member member,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody @Valid DiagnosisQuickRequestDTO req
     ) {
+        if (customUserDetails == null) { //로그인안되면 COMMON401
+            throw new GeneralException(ErrorStatus._UNAUTHORIZED);
+        }
+        Member member = customUserDetails.getMember();
         return ApiResponse.onSuccess(diagnosisQuickService.submitQuickDiagnosis(member, req));
     }
 
@@ -60,18 +69,27 @@ public class DiagnosisController {
     //최신 진단결과 조회
     @GetMapping("/diagnosis/me")
     public ApiResponse<DiagnosisResultResponseDTO> getMyDiagnosisResult(
-            @AuthenticationPrincipal Member member
+            @AuthenticationPrincipal CustomUserDetails customUserDetails
     ) {
+        if (customUserDetails == null) { //로그인안되면 COMMON401
+            throw new GeneralException(ErrorStatus._UNAUTHORIZED);
+        }
+        Member member = customUserDetails.getMember();
         return ApiResponse.onSuccess(diagnosisResultService.getMyLatestResult(member));
     }
 
-    //과거 진단이력 조회
+    //과거 진단이력 조회 ( 슬라이스로 페이징 : 처음은 3개, 그 프론트에서 10개를 명시하면 됨.)
     @GetMapping("/diagnosis/me/history")
     public ApiResponse<Slice<DiagnosisHistoryResponseDTO>> getMyDiagnosisHistory(
-            @AuthenticationPrincipal Member member,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "3") int size
     ) {
+        if (customUserDetails == null) { //로그인안되면 COMMON401
+            throw new GeneralException(ErrorStatus._UNAUTHORIZED);
+        }
+        Member member = customUserDetails.getMember();
+
         Pageable pageable = PageRequest.of(
                 page,
                 size,
