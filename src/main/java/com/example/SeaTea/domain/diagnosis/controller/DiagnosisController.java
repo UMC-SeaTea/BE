@@ -26,7 +26,7 @@ import org.springframework.data.domain.Sort;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/diagnosis")
 public class DiagnosisController {
 
     private final DiagnosisDetailService diagnosisDetailService;
@@ -40,7 +40,7 @@ public class DiagnosisController {
     }
 
     //상세 진단
-    @PostMapping("/diagnosis/detail")
+    @PostMapping("/detail")
     public ApiResponse<DiagnosisDetailResponseDTO> submitDetailDiagnosis(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody @Valid DiagnosisDetailRequestDTO req
@@ -53,7 +53,7 @@ public class DiagnosisController {
     }
 
     //간단 진단
-    @PostMapping("/diagnosis/quick")
+    @PostMapping("/quick")
     public ApiResponse<DiagnosisQuickResponseDTO> submitQuickDiagnosis(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody @Valid DiagnosisQuickRequestDTO req
@@ -67,7 +67,7 @@ public class DiagnosisController {
 
 
     //최신 진단결과 조회
-    @GetMapping("/diagnosis/me")
+    @GetMapping("/me")
     public ApiResponse<DiagnosisResultResponseDTO> getMyDiagnosisResult(
             @AuthenticationPrincipal CustomUserDetails customUserDetails
     ) {
@@ -79,7 +79,7 @@ public class DiagnosisController {
     }
 
     //과거 진단이력 조회 ( 슬라이스로 페이징 : 처음은 3개, 그 프론트에서 10개를 명시하면 됨.)
-    @GetMapping("/diagnosis/me/history")
+    @GetMapping("/me/history")
     public ApiResponse<Slice<DiagnosisHistoryResponseDTO>> getMyDiagnosisHistory(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam(defaultValue = "0") int page,
@@ -97,60 +97,61 @@ public class DiagnosisController {
         );
         return ApiResponse.onSuccess(diagnosisResultService.getMyHistory(member, pageable));
     }
-
-    /// 포스트맨 테스트용 API : MemberId로 테스트
-
-    // 임시 테스트용: memberId로 멤버 조회 후 진단 제출
-    @PostMapping("/test/diagnosis/detail")
-    public ApiResponse<DiagnosisDetailResponseDTO> submitDetailDiagnosisTest(
-            @RequestParam Long memberId,
-            @RequestBody @Valid DiagnosisDetailRequestDTO req
-    ) {
-        System.out.println(">>> diagnosis detail test called"); //호출 확인용
-        Member member = findMemberOrThrow(memberId);
-
-        return ApiResponse.onSuccess(diagnosisDetailService.submitDetailDiagnosis(member, req));
-        //성공이면 200 OK, DTO를 JSON으로 반환
-    }
-
-    // 임시 테스트용: memberId로 멤버 조회 후 간단 진단 제출
-    @PostMapping("/test/diagnosis/quick")
-    public ApiResponse<DiagnosisQuickResponseDTO> submitQuickDiagnosisTest(
-            @RequestParam Long memberId,
-            @RequestBody @Valid DiagnosisQuickRequestDTO req
-    ) {
-        System.out.println(">>> diagnosis quick test called"); // 호출 확인용
-
-        Member member = findMemberOrThrow(memberId);
-
-        return ApiResponse.onSuccess(diagnosisQuickService.submitQuickDiagnosis(member, req));
-    }
-
-    // 임시 테스트용: memberId로 멤버 조회 후 최신 이력
-    @GetMapping("/test/diagnosis/me")
-    public ApiResponse<DiagnosisResultResponseDTO> getMyDiagnosisResultTest(
-            @RequestParam Long memberId
-    ) {
-        Member member = findMemberOrThrow(memberId);
-        return ApiResponse.onSuccess(diagnosisResultService.getMyLatestResult(member));
-    }
-
-    //임시 테스트용: memberId로 멤버 조회 후 과거 진단내역 조회 (슬라이스로 페이징)
-    @GetMapping("/test/diagnosis/me/history")
-    public ApiResponse<Slice<DiagnosisHistoryResponseDTO>> getMyDiagnosisHistoryTest(
-            @RequestParam Long memberId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "3") int size
-    ) {
-        Member member = findMemberOrThrow(memberId);
-
-        Pageable pageable = PageRequest.of(
-                page,
-                size,
-                Sort.by(Sort.Direction.DESC, "createdAt")
-        );
-
-        return ApiResponse.onSuccess(diagnosisResultService.getMyHistory(member, pageable));
-    }
+    /// ================== TEST ONLY ==================
+    /// ⚠️ 운영/배포 반영 금지: memberId로 타인 데이터 접근 가능
+    /// 필요 시 로컬에서만 잠깐 사용하고 바로 제거할 것
+    /// ===============================================
+//    // 임시 테스트용: memberId로 멤버 조회 후 진단 제출
+//    @PostMapping("/test/detail")
+//    public ApiResponse<DiagnosisDetailResponseDTO> submitDetailDiagnosisTest(
+//            @RequestParam Long memberId,
+//            @RequestBody @Valid DiagnosisDetailRequestDTO req
+//    ) {
+//        System.out.println(">>> diagnosis detail test called"); //호출 확인용
+//        Member member = findMemberOrThrow(memberId);
+//
+//        return ApiResponse.onSuccess(diagnosisDetailService.submitDetailDiagnosis(member, req));
+//        //성공이면 200 OK, DTO를 JSON으로 반환
+//    }
+//
+//    // 임시 테스트용: memberId로 멤버 조회 후 간단 진단 제출
+//    @PostMapping("/test/quick")
+//    public ApiResponse<DiagnosisQuickResponseDTO> submitQuickDiagnosisTest(
+//            @RequestParam Long memberId,
+//            @RequestBody @Valid DiagnosisQuickRequestDTO req
+//    ) {
+//        System.out.println(">>> diagnosis quick test called"); // 호출 확인용
+//
+//        Member member = findMemberOrThrow(memberId);
+//
+//        return ApiResponse.onSuccess(diagnosisQuickService.submitQuickDiagnosis(member, req));
+//    }
+//
+//    // 임시 테스트용: memberId로 멤버 조회 후 최신 이력
+//    @GetMapping("/test/me")
+//    public ApiResponse<DiagnosisResultResponseDTO> getMyDiagnosisResultTest(
+//            @RequestParam Long memberId
+//    ) {
+//        Member member = findMemberOrThrow(memberId);
+//        return ApiResponse.onSuccess(diagnosisResultService.getMyLatestResult(member));
+//    }
+//
+//    //임시 테스트용: memberId로 멤버 조회 후 과거 진단내역 조회 (슬라이스로 페이징)
+//    @GetMapping("/test/me/history")
+//    public ApiResponse<Slice<DiagnosisHistoryResponseDTO>> getMyDiagnosisHistoryTest(
+//            @RequestParam Long memberId,
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "3") int size
+//    ) {
+//        Member member = findMemberOrThrow(memberId);
+//
+//        Pageable pageable = PageRequest.of(
+//                page,
+//                size,
+//                Sort.by(Sort.Direction.DESC, "createdAt")
+//        );
+//
+//        return ApiResponse.onSuccess(diagnosisResultService.getMyHistory(member, pageable));
+//    }
 
 }
