@@ -12,7 +12,7 @@ public class MemberQueryServiceImpl implements MemberQueryService {
   @Override
   public void checkFlag(Long flag) {
     if(Long.valueOf(1L).equals(flag)){
-      throw new MemberException(MemberErrorCode.NOT_FOUND);
+      throw new MemberException(MemberErrorCode._NOT_FOUND);
     }
   }
 }

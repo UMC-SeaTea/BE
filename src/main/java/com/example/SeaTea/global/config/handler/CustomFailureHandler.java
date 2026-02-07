@@ -34,7 +34,7 @@ public class CustomFailureHandler implements AuthenticationFailureHandler {
 
     objectMapper.writeValue(
         response.getWriter(),
-        ApiResponse.onFailure("AUTH401","로그인에 실패했습니다(인증 실패 / 아이디 비번 불일치)", MemberErrorCode.LOGIN_FAILED)
+        ApiResponse.onFailure("MEMBER401_2","로그인에 실패했습니다(인증 실패 / 아이디 비번 불일치)", MemberErrorCode._LOGIN_FAILED)
     );
   }
 

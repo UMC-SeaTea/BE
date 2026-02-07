@@ -26,7 +26,7 @@ public class SecurityConfig {
 
   private final String[] allowUris = {
       // Swagger 허용
-      "/login",
+      "/api/login",
       "/api/sign-up",
       "/swagger-ui/**",
       "/swagger-resources/**",
@@ -49,7 +49,7 @@ public class SecurityConfig {
             .anyRequest().authenticated()
         )
         .formLogin(form -> form
-                .loginProcessingUrl("/login")
+                .loginProcessingUrl("/api/login")
                 .usernameParameter("email")
                 .passwordParameter("password")
                 .successHandler(customSuccessHandler)
@@ -60,7 +60,7 @@ public class SecurityConfig {
 //        csrf 비활성화
         .csrf(AbstractHttpConfigurer::disable)
         .logout(logout -> logout
-                .logoutUrl("/logout")
+                .logoutUrl("/api/logout")
                 .logoutSuccessHandler(customLogoutSuccessHandler)
                 .permitAll()
 //            .logoutSuccessUrl("/login?logout")

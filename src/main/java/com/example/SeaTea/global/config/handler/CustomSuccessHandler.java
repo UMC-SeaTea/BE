@@ -46,7 +46,7 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 
     objectMapper.writeValue(
         response.getWriter(),
-        ApiResponse.of(MemberSuccessCode.LOGIN_SUCCESS, dto)
+        ApiResponse.of(MemberSuccessCode._LOGIN_SUCCESS, dto)
     );
   }
 }
