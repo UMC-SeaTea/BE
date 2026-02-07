@@ -1,13 +1,16 @@
 package com.example.SeaTea.domain.place.service;
 
 import com.example.SeaTea.domain.place.dto.SpaceCursor;
+import com.example.SeaTea.domain.place.dto.SpaceDetailResponse;
 import com.example.SeaTea.domain.place.dto.SpaceListResponse;
 import com.example.SeaTea.domain.place.dto.SpaceListResponse.CursorInfo;
 import com.example.SeaTea.domain.place.dto.SpaceListResponse.SpaceItem;
 import com.example.SeaTea.domain.place.entity.Place;
+import com.example.SeaTea.domain.place.repository.MemberSavedPlaceRepository;
 import com.example.SeaTea.domain.place.repository.PlaceRepository;
 import com.example.SeaTea.domain.place.repository.PlaceRepository.PlaceDistanceView;
 import com.example.SeaTea.domain.place.status.SpaceErrorStatus;
+import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.global.exception.GeneralException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -29,6 +32,7 @@ public class PlaceQueryService {
     private static final String ID_SORT = "id,asc";
 
     private final PlaceRepository placeRepository;
+    private final MemberSavedPlaceRepository memberSavedPlaceRepository;
     private final Environment environment;
 
     public SpaceListResponse getSpaces(Double lat,
@@ -65,6 +69,62 @@ public class PlaceQueryService {
             throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
         }
         return fetchById(keyword, pageSize, cursorToken);
+    }
+
+    public SpaceDetailResponse getSpaceDetail(Long spaceId,
+                                              Double lat,
+                                              Double lng,
+                                              Member member) {
+        if (lat != null || lng != null) {
+            validateLocation(lat, lng);
+        }
+
+        Place place = placeRepository.findById(spaceId)
+            .orElseThrow(() -> new GeneralException(SpaceErrorStatus._NOT_FOUND));
+
+        Long savedCount = memberSavedPlaceRepository.countByPlace_PlaceId(spaceId);
+
+        Boolean isSaved = null;
+        Long sameTypeSavedCount = null;
+        if (member != null) {
+            isSaved = memberSavedPlaceRepository.existsByMember_IdAndPlace_PlaceId(member.getId(), spaceId);
+            Long tastingTypeId = place.getTastingTypeId();
+            if (tastingTypeId != null) {
+                sameTypeSavedCount = memberSavedPlaceRepository.countByMemberIdAndTastingTypeId(
+                    member.getId(), tastingTypeId
+                );
+            }
+        }
+
+        Long distanceMeters = null;
+        if (lat != null && lng != null && place.getLat() != null && place.getLng() != null) {
+            distanceMeters = Math.round(
+                haversineMeters(lat, lng, place.getLat().doubleValue(), place.getLng().doubleValue())
+            );
+        }
+
+        String tastingTypeCode = place.getTastingType() == null
+            ? null
+            : place.getTastingType().getCode();
+
+        return new SpaceDetailResponse(
+            place.getPlaceId(),
+            place.getName(),
+            tastingTypeCode,
+            toDouble(place.getLat()),
+            toDouble(place.getLng()),
+            place.getThumbnailImageUrl(),
+            place.getAddress(),
+            place.getRoadAddress(),
+            place.getPhone(),
+            place.getOpeningHours(),
+            place.getDescription(),
+            place.getNote(),
+            distanceMeters,
+            savedCount,
+            sameTypeSavedCount,
+            isSaved
+        );
     }
 
     private SpaceListResponse fetchByDistance(double lat,
@@ -177,6 +237,19 @@ public class PlaceQueryService {
 
     private Double toDouble(BigDecimal value) {
         return value == null ? null : value.doubleValue();
+    }
+
+    private double haversineMeters(double lat1, double lng1, double lat2, double lng2) {
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLng = Math.toRadians(lng2 - lng1);
+        double rLat1 = Math.toRadians(lat1);
+        double rLat2 = Math.toRadians(lat2);
+
+        double a = Math.pow(Math.sin(dLat / 2), 2)
+            + Math.cos(rLat1) * Math.cos(rLat2) * Math.pow(Math.sin(dLng / 2), 2);
+        // 부동소수점 오차로 a가 1을 초과하는 경우 방어 처리
+        double clamped = Math.min(1.0d, a);
+        return 2 * 6371000 * Math.asin(Math.sqrt(clamped));
     }
 
     private boolean isH2() {
