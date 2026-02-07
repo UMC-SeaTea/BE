@@ -26,6 +26,7 @@ public class SecurityConfig {
       // Swagger 허용
       "/login",
       "/api/sign-up",
+      "/api/spaces/**",
       "/swagger-ui/**",
       "/swagger-resources/**",
       "/v3/api-docs/**",
@@ -54,6 +55,7 @@ public class SecurityConfig {
         )
 //        csrf 비활성화
         .csrf(AbstractHttpConfigurer::disable)
+        .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
         .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessHandler(customLogoutSuccessHandler)
