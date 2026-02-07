@@ -80,6 +80,6 @@ public class SwaggerConfig {
         .info(info)
         .components(components) // 위에서 정의한 JWT 설정 포함
         .addSecurityItem(securityRequirement) // 전역 보안 요구사항 적용
-        .path("/login", new PathItem().post(loginOperation)); // 로그인 경로 강제 추가******
+        .path("/api/login", new PathItem().post(loginOperation)); // 로그인 경로 강제 추가******
   }
 }
