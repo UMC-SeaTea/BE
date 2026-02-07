@@ -3,7 +3,6 @@ package com.example.SeaTea.domain.member.controller;
 import com.example.SeaTea.domain.member.converter.MemberConverter;
 import com.example.SeaTea.domain.member.dto.request.MemberReqDTO;
 import com.example.SeaTea.domain.member.dto.response.MemberResDTO;
-import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import com.example.SeaTea.domain.member.exception.code.MemberSuccessCode;
 import com.example.SeaTea.domain.member.service.command.MemberCommandService;
@@ -12,15 +11,11 @@ import com.example.SeaTea.global.apiPayLoad.ApiResponse;
 import com.example.SeaTea.global.auth.CustomUserDetails;
 import com.example.SeaTea.global.status.SuccessStatus;
 import jakarta.validation.Valid;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -83,10 +78,18 @@ public class MemberController {
     } else if (principal instanceof OAuth2User oAuth2User) {
       // 소셜 로그인 유저 (Map 파싱)
       Map<String, Object> attributes = oAuth2User.getAttributes();
-      Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
-      // ... (카카오 등 소셜별 파싱 로직)
-      email = (String) attributes.get("email");
       nickname = "소셜 유저";
+
+      // 카카오 구조에 따른 안전한 파싱
+      if (attributes.get("kakao_account") instanceof Map<?, ?> kakaoAccount) {
+        email = (String) kakaoAccount.get("email");
+        if (kakaoAccount.get("profile") instanceof Map<?, ?> profile) {
+          nickname = (String) profile.get("nickname");
+        }
+      } else {
+        // 카카오가 아닌 다른 소셜 서비스일 경우의 기본 파싱
+        email = (String) attributes.get("email");
+      }
 
       // 소셜 유저의 권한 추출 (SecurityContext에 설정된 권한 기준)
       role = oAuth2User.getAuthorities().stream()
