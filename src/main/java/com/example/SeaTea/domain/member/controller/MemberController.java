@@ -4,6 +4,7 @@ import com.example.SeaTea.domain.member.converter.MemberConverter;
 import com.example.SeaTea.domain.member.dto.request.MemberReqDTO;
 import com.example.SeaTea.domain.member.dto.response.MemberResDTO;
 import com.example.SeaTea.domain.member.entity.Member;
+import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import com.example.SeaTea.domain.member.exception.code.MemberSuccessCode;
 import com.example.SeaTea.domain.member.service.command.MemberCommandService;
 import com.example.SeaTea.domain.member.service.query.MemberQueryService;
@@ -63,9 +64,11 @@ public class MemberController {
   }
 
   @GetMapping("/users/me")
-  public ResponseEntity<?> getMyInfo(@AuthenticationPrincipal Object principal) {
+  public ApiResponse<MemberResDTO.LoginDTO> getMyInfo(@AuthenticationPrincipal Object principal) {
     if (principal == null) {
-      return ResponseEntity.status(401).body("로그인 상태가 아닙니다.");
+      // 예외처리 통일을 위해 ApiResponse로 처리
+      // throw new MemberException(MemberErrorCode._NOT_LOGIN);
+      return ApiResponse.onFailure(MemberErrorCode._NOT_LOGIN.getCode(),MemberErrorCode._NOT_LOGIN.getMessage(),null);
     }
 
     String email;
@@ -91,33 +94,20 @@ public class MemberController {
           .findFirst()
           .orElse("ROLE_MEMBER");
     } else {
-      return ResponseEntity.status(400).body("알 수 없는 인증 형식입니다.");
+      // 로그인 되지 않은 상태
+      return ApiResponse.onFailure(MemberErrorCode._NOT_LOGIN.getCode(),MemberErrorCode._NOT_LOGIN.getMessage(),null);
+//      return ApiResponse.onFailure(MemberErrorCode._INVALID_LOGIN_TYPE.getCode(),MemberErrorCode._INVALID_LOGIN_TYPE.getMessage(),null);
     }
 
-    Map<String, Object> response = new HashMap<>();
-    response.put("email", email);
-    response.put("nickname", nickname);
-    response.put("role", role);
+    MemberResDTO.LoginDTO result = MemberResDTO.LoginDTO.builder()
+        .email(email)
+        .nickname(nickname)
+        .role(role)
+        .build();
 
-    return ResponseEntity.ok(response);
+    // 로그인 완료
+    return ApiResponse.of(MemberSuccessCode._FOUND, result);
   }
-
-//  @GetMapping("/users/me")
-//  public ResponseEntity<?> getMyInfo(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
-//    if (customUserDetails == null) {
-//      return ResponseEntity.status(401).body("로그인 상태가 아닙니다.");
-//    }
-//
-//    Member member = customUserDetails.getMember();
-//
-//    // 필요한 정보만 담아서 응답 (보안상 비밀번호 등은 제외)
-//    Map<String, Object> response = new HashMap<>();
-//    response.put("email", member.getEmail());
-//    response.put("nickname", member.getNickname()); // Member 엔티티에 닉네임이 있다고 가정
-//    response.put("role", member.getRole());
-//
-//    return ResponseEntity.ok(response);
-//  }
 
   // 관리자 테스트
   @GetMapping("/admin/test")
@@ -125,9 +115,7 @@ public class MemberController {
     // 응답 코드 정의
     SuccessStatus code = SuccessStatus._OK;
 //    throw new MemberException(ErrorStatus._INTERNAL_SERVER_ERROR);
-    return ApiResponse.onSuccess(
-        MemberConverter.toTestingDTO("관리자 계정입니다!")
-    );
+    return ApiResponse.onSuccess(MemberConverter.toTestingDTO("관리자 계정입니다!"));
   }
 
   // 예외 상황
