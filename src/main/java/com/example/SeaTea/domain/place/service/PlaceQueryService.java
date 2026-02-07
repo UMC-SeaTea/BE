@@ -247,7 +247,9 @@ public class PlaceQueryService {
 
         double a = Math.pow(Math.sin(dLat / 2), 2)
             + Math.cos(rLat1) * Math.cos(rLat2) * Math.pow(Math.sin(dLng / 2), 2);
-        return 2 * 6371000 * Math.asin(Math.sqrt(a));
+        // 부동소수점 오차로 a가 1을 초과하는 경우 방어 처리
+        double clamped = Math.min(1.0d, a);
+        return 2 * 6371000 * Math.asin(Math.sqrt(clamped));
     }
 
     private boolean isH2() {

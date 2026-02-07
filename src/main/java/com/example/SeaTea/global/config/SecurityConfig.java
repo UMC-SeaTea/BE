@@ -12,7 +12,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfigurationSource;
 
 @EnableWebSecurity
 @Configuration
@@ -22,20 +21,15 @@ public class SecurityConfig {
   private final CustomSuccessHandler customSuccessHandler;
   private final CustomFailureHandler customFailureHandler;
   private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
-  private final CorsConfigurationSource corsConfigurationSource;
 
   private final String[] allowUris = {
       // Swagger 허용
-      "/api/login",
+      "/login",
       "/api/sign-up",
-      "/api/spaces/**",
       "/swagger-ui/**",
       "/swagger-resources/**",
       "/v3/api-docs/**",
       "/error",
-
-      //Diagnosis 테스트용 (로그인 전)
-      "/api/diagnosis/test/**",
 
       // 콘솔 로그에 favicon 제거
       "/favicon.ico"
@@ -45,12 +39,13 @@ public class SecurityConfig {
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
         .authorizeHttpRequests(requests -> requests
+            .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/spaces/**").permitAll()
             .requestMatchers(allowUris).permitAll()
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
             .anyRequest().authenticated()
         )
         .formLogin(form -> form
-                .loginProcessingUrl("/api/login")
+                .loginProcessingUrl("/login")
                 .usernameParameter("email")
                 .passwordParameter("password")
                 .successHandler(customSuccessHandler)
@@ -62,14 +57,11 @@ public class SecurityConfig {
         .csrf(AbstractHttpConfigurer::disable)
         .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
         .logout(logout -> logout
-                .logoutUrl("/api/logout")
+                .logoutUrl("/logout")
                 .logoutSuccessHandler(customLogoutSuccessHandler)
                 .permitAll()
 //            .logoutSuccessUrl("/login?logout")
         );
-
-    // CORS 설정
-    http.cors(cors -> cors.configurationSource(corsConfigurationSource));
 
     return http.build();
   }
