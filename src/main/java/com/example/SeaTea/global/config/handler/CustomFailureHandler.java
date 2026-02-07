@@ -38,5 +38,4 @@ public class CustomFailureHandler implements AuthenticationFailureHandler {
     );
   }
 
-
 }

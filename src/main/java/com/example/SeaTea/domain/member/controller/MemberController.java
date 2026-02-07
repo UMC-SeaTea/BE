@@ -13,9 +13,13 @@ import com.example.SeaTea.global.status.SuccessStatus;
 import jakarta.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -47,34 +51,73 @@ public class MemberController {
 
 
   // ******** 중복체크
-//  @GetMapping("/check/email")
-//  public ApiResponse<String> checkEmail(@RequestParam String email) {
-//    memberCommandService.checkEmailDuplication(email);
-//    return ApiResponse.onSuccess("사용 가능한 이메일입니다.");
-//  }
-//  @GetMapping("/check/nickname")
-//  public ApiResponse<String> checkNickname(@RequestParam String nickname) {
-//    memberCommandService.checkNicknameDuplication(nickname);
-//    return ApiResponse.onSuccess("사용 가능한 닉네임입니다.");
-//  }
-
+  @GetMapping("/check/email")
+  public ApiResponse<String> checkEmail(@RequestParam String email) {
+    memberCommandService.checkEmailDuplication(email);
+    return ApiResponse.onSuccess("사용 가능한 이메일입니다.");
+  }
+  @GetMapping("/check/nickname")
+  public ApiResponse<String> checkNickname(@RequestParam String nickname) {
+    memberCommandService.checkNicknameDuplication(nickname);
+    return ApiResponse.onSuccess("사용 가능한 닉네임입니다.");
+  }
 
   @GetMapping("/users/me")
-  public ResponseEntity<?> getMyInfo(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
-    if (customUserDetails == null) {
+  public ResponseEntity<?> getMyInfo(@AuthenticationPrincipal Object principal) {
+    if (principal == null) {
       return ResponseEntity.status(401).body("로그인 상태가 아닙니다.");
     }
 
-    Member member = customUserDetails.getMember();
+    String email;
+    String nickname;
+    String role;
 
-    // 필요한 정보만 담아서 응답 (보안상 비밀번호 등은 제외)
+    if (principal instanceof CustomUserDetails userDetails) {
+      // 일반 로그인 유저
+      email = userDetails.getMember().getEmail();
+      nickname = userDetails.getMember().getNickname();
+      role = userDetails.getMember().getRole().toString();
+    } else if (principal instanceof OAuth2User oAuth2User) {
+      // 소셜 로그인 유저 (Map 파싱)
+      Map<String, Object> attributes = oAuth2User.getAttributes();
+      Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
+      // ... (카카오 등 소셜별 파싱 로직)
+      email = (String) attributes.get("email");
+      nickname = "소셜 유저";
+
+      // 소셜 유저의 권한 추출 (SecurityContext에 설정된 권한 기준)
+      role = oAuth2User.getAuthorities().stream()
+          .map(GrantedAuthority::getAuthority)
+          .findFirst()
+          .orElse("ROLE_MEMBER");
+    } else {
+      return ResponseEntity.status(400).body("알 수 없는 인증 형식입니다.");
+    }
+
     Map<String, Object> response = new HashMap<>();
-    response.put("email", member.getEmail());
-    response.put("nickname", member.getNickname()); // Member 엔티티에 닉네임이 있다고 가정
-    response.put("role", member.getRole());
+    response.put("email", email);
+    response.put("nickname", nickname);
+    response.put("role", role);
 
     return ResponseEntity.ok(response);
   }
+
+//  @GetMapping("/users/me")
+//  public ResponseEntity<?> getMyInfo(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+//    if (customUserDetails == null) {
+//      return ResponseEntity.status(401).body("로그인 상태가 아닙니다.");
+//    }
+//
+//    Member member = customUserDetails.getMember();
+//
+//    // 필요한 정보만 담아서 응답 (보안상 비밀번호 등은 제외)
+//    Map<String, Object> response = new HashMap<>();
+//    response.put("email", member.getEmail());
+//    response.put("nickname", member.getNickname()); // Member 엔티티에 닉네임이 있다고 가정
+//    response.put("role", member.getRole());
+//
+//    return ResponseEntity.ok(response);
+//  }
 
   // 관리자 테스트
   @GetMapping("/admin/test")
