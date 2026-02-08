@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 
 @Slf4j
 @RestControllerAdvice
@@ -94,6 +95,31 @@ public class GlobalExceptionHandler {
             reason.getCode(),
             reason.getMessage(),
             errorMessage // 구체적인 에러 사유를 데이터로 전달
+        ));
+  }
+
+  /**
+   * 3-1. 필수 RequestParam 누락
+   * 컨트롤러 메서드 호출 전에 발생합니다.
+   */
+  @ExceptionHandler(MissingServletRequestParameterException.class)
+  public ResponseEntity<ApiResponse<Object>> handleMissingServletRequestParameter(
+      MissingServletRequestParameterException e, HttpServletRequest request) {
+
+    log.warn("[MissingRequestParam] Url: {}, Param: {}, Message: {}",
+        request.getRequestURI(), e.getParameterName(), e.getMessage());
+
+    ErrorReasonDTO reason = ErrorStatus._BAD_REQUEST.getReasonHttpStatus();
+
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("missingParameter", e.getParameterName());
+
+    return ResponseEntity
+        .status(reason.getHttpStatus())
+        .body(ApiResponse.onFailure(
+            reason.getCode(),
+            reason.getMessage(),
+            data
         ));
   }
 

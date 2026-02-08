@@ -31,6 +31,29 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
         Double getDistanceMeters();
     }
 
+    // 타입(code)으로 장소 추천/검색 + keyset (distance 없이)
+    @Query(value = """
+        select
+            p.place_id as placeId,
+            p.name as name,
+            t.code as tastingTypeCode,
+            p.lat as lat,
+            p.lng as lng,
+            p.thumbnail_image_url as thumbnailImageUrl,
+            p.address as address,
+            null as distanceMeters
+        from place p
+        left join tasting_note_type t on t.id = p.tasting_type_id
+        where t.code = :tastingTypeCode
+          and (:lastId is null or p.place_id > :lastId)
+        order by p.place_id asc
+        limit :limit
+        """, nativeQuery = true)
+    List<PlaceDistanceView> findByTastingTypeWithCursor(@Param("tastingTypeCode") String tastingTypeCode,
+                                                       @Param("lastId") Long lastId,
+                                                       @Param("limit") int limit);
+
+
     // MySQL 거리 정렬 + keyset
     @Query(value = """
         select * from (
