@@ -46,10 +46,10 @@ public class PlaceController {
         );
     }
 
-    //공간 추천
-    @GetMapping("/recommend")
-    @Operation(summary = "공간 추천", description = "휴식유형(tastingTypeCode)에 해당하는 공간을 커서 기반으로 추천합니다.")
-    public ApiResponse<SpaceListResponse> getRecommendedSpaces(
+    // 타입별 공간 목록 조회 (관리/검수/탐색 용도)
+    @GetMapping("/type")
+    @Operation(summary = "타입별 공간 목록 조회", description = "휴식유형(tastingTypeCode)에 해당하는 공간 목록을 커서 기반으로 조회합니다.")
+    public ApiResponse<SpaceListResponse> getSpacesByType(
         @Parameter(description = "휴식유형 코드 (예: SMOKY)")
         @RequestParam TastingNoteTypeCode tastingTypeCode,
         @Parameter(description = "위도 (거리 표시 시 필요)")
@@ -63,6 +63,23 @@ public class PlaceController {
     ) {
         return ApiResponse.onSuccess(
             placeQueryService.getRecommendedSpaces(tastingTypeCode.name(), lat, lng, size, cursor)
+        );
+    }
+
+    // 타입 내 랜덤 추천 3개 (사용자 노출용 추천)
+    // 현재는 기존 조회 로직을 재사용하여 size=3으로 제한합니다. (랜덤화는 서비스 로직에서 적용 권장)
+    @GetMapping("/recommend")
+    @Operation(summary = "공간 추천(랜덤 3개)", description = "휴식유형(tastingTypeCode)에 해당하는 공간 중 3개를 추천합니다.")
+    public ApiResponse<SpaceListResponse> recommend3Spaces(
+        @Parameter(description = "휴식유형 코드 (예: SMOKY)")
+        @RequestParam TastingNoteTypeCode tastingTypeCode,
+        @Parameter(description = "위도 (거리 표시 시 필요)")
+        @RequestParam(required = false) Double lat,
+        @Parameter(description = "경도 (거리 표시 시 필요)")
+        @RequestParam(required = false) Double lng
+    ) {
+        return ApiResponse.onSuccess(
+            placeQueryService.recommend3SpacesRandom(tastingTypeCode.name(), lat, lng)
         );
     }
 

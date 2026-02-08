@@ -58,19 +58,23 @@ public class PlaceQueryService {
         if (hasLocation) {
             validateLocation(lat, lng);
             if (cursorToken != null && cursorToken.getSort() != null
-                && !DISTANCE_SORT.equalsIgnoreCase(cursorToken.getSort())) {
+                    && !DISTANCE_SORT.equalsIgnoreCase(cursorToken.getSort())) {
                 throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
             }
             return fetchByDistance(lat, lng, keyword, pageSize, cursorToken);
         }
 
         if (cursorToken != null && cursorToken.getSort() != null
-            && !ID_SORT.equalsIgnoreCase(cursorToken.getSort())) {
+                && !ID_SORT.equalsIgnoreCase(cursorToken.getSort())) {
             throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
         }
         return fetchById(keyword, pageSize, cursorToken);
     }
 
+    // 타입별 공간 목록 조회 (관리/검수/탐색 용도)
+    // - tastingTypeCode 기준으로 공간을 조회합니다.
+    // - size/cursor 기반 커서 페이징을 지원합니다.
+    // - lat/lng가 전달되면 distanceMeters를 계산하여 응답에 포함합니다. (정렬에는 사용하지 않음)
     public SpaceListResponse getRecommendedSpaces(
             String tastingTypeCode,
             Double lat,
@@ -78,22 +82,13 @@ public class PlaceQueryService {
             Integer size,
             String cursor
     ) {
-        // 1) 타입 코드 검증
-        if (tastingTypeCode == null || tastingTypeCode.trim().isEmpty()) {
-            throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
-        } //타입 코드가 Null이면 안됨
-        String normalizedTypeCode = tastingTypeCode.trim().toUpperCase();
-        try {
-            // enum에 존재하는 코드인지 검증 (값 매칭 강제)
-            com.example.SeaTea.domain.diagnosis.enums.TastingNoteTypeCode.valueOf(normalizedTypeCode);
-        } catch (IllegalArgumentException e) {
-            throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
-        }
+        // 1) 휴식 유형 코드 정규화 및 유효성 검증 (Enum 기준)
+        String normalizedTypeCode = normalizeAndValidateTypeCode(tastingTypeCode);
 
         // 2) 사이즈 정규화
         int pageSize = normalizeSize(size);
 
-        // 3) 커서 decode (id 기반 keyset)
+        // 2) 커서 디코딩 (id 기반 keyset pagination)
         SpaceCursor cursorToken = null;
         if (cursor != null) {
             try {
@@ -108,13 +103,13 @@ public class PlaceQueryService {
         }
         Long lastId = cursorToken == null ? null : cursorToken.getLastId();
 
-        // 4) 위치값 검증 + 거리 계산(표시용)
+        // 3) 위치값 검증 + 거리 계산 여부 판단 (표시용)
         boolean hasLocation = lat != null || lng != null;
         if (hasLocation) {
             validateLocation(lat, lng);
         }
 
-        // 5) 다음 페이지 여부 판별을 위해 size + 1 조회
+        // 4) 다음 페이지 여부 판단을 위해 size + 1 만큼 조회
         int limit = pageSize + 1;
         List<PlaceDistanceView> rows = placeRepository.findByTastingTypeWithCursor(
                 normalizedTypeCode,
@@ -165,7 +160,7 @@ public class PlaceQueryService {
         }
 
         Place place = placeRepository.findById(spaceId)
-            .orElseThrow(() -> new GeneralException(SpaceErrorStatus._NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(SpaceErrorStatus._NOT_FOUND));
 
         Long savedCount = memberSavedPlaceRepository.countByPlace_PlaceId(spaceId);
 
@@ -176,7 +171,7 @@ public class PlaceQueryService {
             Long tastingTypeId = place.getTastingTypeId();
             if (tastingTypeId != null) {
                 sameTypeSavedCount = memberSavedPlaceRepository.countByMemberIdAndTastingTypeId(
-                    member.getId(), tastingTypeId
+                        member.getId(), tastingTypeId
                 );
             }
         }
@@ -184,31 +179,31 @@ public class PlaceQueryService {
         Long distanceMeters = null;
         if (lat != null && lng != null && place.getLat() != null && place.getLng() != null) {
             distanceMeters = Math.round(
-                haversineMeters(lat, lng, place.getLat().doubleValue(), place.getLng().doubleValue())
+                    haversineMeters(lat, lng, place.getLat().doubleValue(), place.getLng().doubleValue())
             );
         }
 
         String tastingTypeCode = place.getTastingType() == null
-            ? null
-            : place.getTastingType().getCode();
+                ? null
+                : place.getTastingType().getCode();
 
         return new SpaceDetailResponse(
-            place.getPlaceId(),
-            place.getName(),
-            tastingTypeCode,
-            toDouble(place.getLat()),
-            toDouble(place.getLng()),
-            place.getThumbnailImageUrl(),
-            place.getAddress(),
-            place.getRoadAddress(),
-            place.getPhone(),
-            place.getOpeningHours(),
-            place.getDescription(),
-            place.getNote(),
-            distanceMeters,
-            savedCount,
-            sameTypeSavedCount,
-            isSaved
+                place.getPlaceId(),
+                place.getName(),
+                tastingTypeCode,
+                toDouble(place.getLat()),
+                toDouble(place.getLng()),
+                place.getThumbnailImageUrl(),
+                place.getAddress(),
+                place.getRoadAddress(),
+                place.getPhone(),
+                place.getOpeningHours(),
+                place.getDescription(),
+                place.getNote(),
+                distanceMeters,
+                savedCount,
+                sameTypeSavedCount,
+                isSaved
         );
     }
 
@@ -222,8 +217,8 @@ public class PlaceQueryService {
 
         // 다음 페이지 여부 판별을 위해 size + 1 조회
         List<PlaceDistanceView> rows = isH2()
-            ? placeRepository.findByDistanceWithCursorH2(lat, lng, keyword, lastDistance, lastId, size + 1)
-            : placeRepository.findByDistanceWithCursor(lat, lng, keyword, lastDistance, lastId, size + 1);
+                ? placeRepository.findByDistanceWithCursorH2(lat, lng, keyword, lastDistance, lastId, size + 1)
+                : placeRepository.findByDistanceWithCursor(lat, lng, keyword, lastDistance, lastId, size + 1);
 
         boolean hasNext = rows.size() > size;
         List<PlaceDistanceView> page = hasNext ? rows.subList(0, size) : rows;
@@ -231,14 +226,14 @@ public class PlaceQueryService {
         List<SpaceItem> items = new ArrayList<>();
         for (PlaceDistanceView row : page) {
             items.add(new SpaceItem(
-                row.getPlaceId(),
-                row.getName(),
-                row.getTastingTypeCode(),
-                toDouble(row.getLat()),
-                toDouble(row.getLng()),
-                row.getThumbnailImageUrl(),
-                row.getAddress(),
-                row.getDistanceMeters() == null ? null : Math.round(row.getDistanceMeters())
+                    row.getPlaceId(),
+                    row.getName(),
+                    row.getTastingTypeCode(),
+                    toDouble(row.getLat()),
+                    toDouble(row.getLng()),
+                    row.getThumbnailImageUrl(),
+                    row.getAddress(),
+                    row.getDistanceMeters() == null ? null : Math.round(row.getDistanceMeters())
             ));
         }
 
@@ -246,9 +241,9 @@ public class PlaceQueryService {
         if (hasNext) {
             PlaceDistanceView last = page.get(page.size() - 1);
             SpaceCursor next = new SpaceCursor(
-                last.getPlaceId(),
-                DISTANCE_SORT,
-                last.getDistanceMeters()
+                    last.getPlaceId(),
+                    DISTANCE_SORT,
+                    last.getDistanceMeters()
             );
             nextCursor = SpaceCursor.encode(next);
         }
@@ -268,14 +263,14 @@ public class PlaceQueryService {
         List<SpaceItem> items = new ArrayList<>();
         for (Place place : page) {
             items.add(new SpaceItem(
-                place.getPlaceId(),
-                place.getName(),
-                place.getTastingType() == null ? null : place.getTastingType().getCode(),
-                toDouble(place.getLat()),
-                toDouble(place.getLng()),
-                place.getThumbnailImageUrl(),
-                place.getAddress(),
-                null
+                    place.getPlaceId(),
+                    place.getName(),
+                    place.getTastingType() == null ? null : place.getTastingType().getCode(),
+                    toDouble(place.getLat()),
+                    toDouble(place.getLng()),
+                    place.getThumbnailImageUrl(),
+                    place.getAddress(),
+                    null
             ));
         }
 
@@ -331,7 +326,7 @@ public class PlaceQueryService {
         double rLat2 = Math.toRadians(lat2);
 
         double a = Math.pow(Math.sin(dLat / 2), 2)
-            + Math.cos(rLat1) * Math.cos(rLat2) * Math.pow(Math.sin(dLng / 2), 2);
+                + Math.cos(rLat1) * Math.cos(rLat2) * Math.pow(Math.sin(dLng / 2), 2);
         // 부동소수점 오차로 a가 1을 초과하는 경우 방어 처리
         double clamped = Math.min(1.0d, a);
         return 2 * 6371000 * Math.asin(Math.sqrt(clamped));
@@ -340,5 +335,77 @@ public class PlaceQueryService {
     private boolean isH2() {
         String url = environment.getProperty("spring.datasource.url");
         return url != null && url.startsWith("jdbc:h2");
+    }
+
+    // 휴식 유형 코드 정규화 및 검증
+    // - null/blank 방어
+    // - 대문자 변환 후 TastingNoteTypeCode enum 기준으로 검증
+    private String normalizeAndValidateTypeCode(String tastingTypeCode) {
+        if (tastingTypeCode == null || tastingTypeCode.trim().isEmpty()) {
+            throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+        }
+        String normalizedTypeCode = tastingTypeCode.trim().toUpperCase();
+        try {
+            com.example.SeaTea.domain.diagnosis.enums.TastingNoteTypeCode.valueOf(normalizedTypeCode);
+        } catch (IllegalArgumentException e) {
+            throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+        }
+        return normalizedTypeCode;
+    }
+
+    // 타입 내 랜덤 공간 추천 (PM 요구사항)
+    // - 해당 휴식 유형에 속한 공간 중 최대 3개를 랜덤으로 반환
+    // - lat/lng가 전달되면 distanceMeters를 계산하여 응답에 포함
+    public SpaceListResponse recommend3SpacesRandom(
+            String tastingTypeCode,
+            Double lat,
+            Double lng
+    ) {
+        // 1) 휴식 유형 코드 정규화 및 유효성 검증
+        String normalizedTypeCode = normalizeAndValidateTypeCode(tastingTypeCode);
+
+        // 2) 위치값 검증 (선택 파라미터)
+        boolean hasLocation = lat != null || lng != null;
+        if (hasLocation) {
+            validateLocation(lat, lng);
+        }
+
+        // 3) 타입에 해당하는 공간을 충분히 많이 조회 (현재 규모 기준으로 500은 안전)
+        List<PlaceDistanceView> rows = placeRepository.findByTastingTypeWithCursor(
+                normalizedTypeCode,
+                null,
+                500
+        );
+
+        // 4) 추천 노출을 위한 랜덤 섞기
+        java.util.Collections.shuffle(rows);
+
+        // 5) 최대 3개까지만 추출
+        int take = Math.min(3, rows.size());
+        List<PlaceDistanceView> page = rows.subList(0, take);
+
+        List<SpaceItem> items = new ArrayList<>();
+        for (PlaceDistanceView row : page) {
+            Long distanceMeters = null;
+            if (hasLocation && row.getLat() != null && row.getLng() != null) {
+                distanceMeters = Math.round(
+                        haversineMeters(lat, lng, row.getLat().doubleValue(), row.getLng().doubleValue())
+                );
+            }
+
+            items.add(new SpaceItem(
+                    row.getPlaceId(),
+                    row.getName(),
+                    row.getTastingTypeCode(),
+                    toDouble(row.getLat()),
+                    toDouble(row.getLng()),
+                    row.getThumbnailImageUrl(),
+                    row.getAddress(),
+                    distanceMeters
+            ));
+        }
+
+        // 6) 추천 API는 페이징/커서 정보를 제공하지 않음
+        return new SpaceListResponse(items, new CursorInfo(null, false));
     }
 }
