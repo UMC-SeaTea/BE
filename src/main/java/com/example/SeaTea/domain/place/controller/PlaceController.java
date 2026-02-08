@@ -1,5 +1,7 @@
 package com.example.SeaTea.domain.place.controller;
 
+import com.example.SeaTea.domain.diagnosis.enums.TastingNoteTypeCode;
+
 import com.example.SeaTea.domain.place.dto.SpaceListResponse;
 import com.example.SeaTea.domain.place.service.PlaceQueryService;
 import com.example.SeaTea.domain.place.dto.SpaceDetailResponse;
@@ -41,6 +43,26 @@ public class PlaceController {
     ) {
         return ApiResponse.onSuccess(
             placeQueryService.getSpaces(lat, lng, q, size, cursor)
+        );
+    }
+
+    //공간 추천
+    @GetMapping("/recommend")
+    @Operation(summary = "공간 추천", description = "휴식유형(tastingTypeCode)에 해당하는 공간을 커서 기반으로 추천합니다.")
+    public ApiResponse<SpaceListResponse> getRecommendedSpaces(
+        @Parameter(description = "휴식유형 코드 (예: SMOKY)")
+        @RequestParam TastingNoteTypeCode tastingTypeCode,
+        @Parameter(description = "위도 (거리 표시 시 필요)")
+        @RequestParam(required = false) Double lat,
+        @Parameter(description = "경도 (거리 표시 시 필요)")
+        @RequestParam(required = false) Double lng,
+        @Parameter(description = "페이지 크기 (기본 20, 최대 100)")
+        @RequestParam(required = false) Integer size,
+        @Parameter(description = "커서 토큰 (응답의 nextCursor 그대로 전달)")
+        @RequestParam(required = false) String cursor
+    ) {
+        return ApiResponse.onSuccess(
+            placeQueryService.getRecommendedSpaces(tastingTypeCode.name(), lat, lng, size, cursor)
         );
     }
 

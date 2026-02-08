@@ -71,6 +71,91 @@ public class PlaceQueryService {
         return fetchById(keyword, pageSize, cursorToken);
     }
 
+    public SpaceListResponse getRecommendedSpaces(
+            String tastingTypeCode,
+            Double lat,
+            Double lng,
+            Integer size,
+            String cursor
+    ) {
+        // 1) 타입 코드 검증
+        if (tastingTypeCode == null || tastingTypeCode.trim().isEmpty()) {
+            throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+        } //타입 코드가 Null이면 안됨
+        String normalizedTypeCode = tastingTypeCode.trim().toUpperCase();
+        try {
+            // enum에 존재하는 코드인지 검증 (값 매칭 강제)
+            com.example.SeaTea.domain.diagnosis.enums.TastingNoteTypeCode.valueOf(normalizedTypeCode);
+        } catch (IllegalArgumentException e) {
+            throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+        }
+
+        // 2) 사이즈 정규화
+        int pageSize = normalizeSize(size);
+
+        // 3) 커서 decode (id 기반 keyset)
+        SpaceCursor cursorToken = null;
+        if (cursor != null) {
+            try {
+                cursorToken = SpaceCursor.decode(cursor);
+            } catch (IllegalArgumentException e) {
+                throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+            }
+        }
+        if (cursorToken != null && cursorToken.getSort() != null
+                && !ID_SORT.equalsIgnoreCase(cursorToken.getSort())) {
+            throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+        }
+        Long lastId = cursorToken == null ? null : cursorToken.getLastId();
+
+        // 4) 위치값 검증 + 거리 계산(표시용)
+        boolean hasLocation = lat != null || lng != null;
+        if (hasLocation) {
+            validateLocation(lat, lng);
+        }
+
+        // 5) 다음 페이지 여부 판별을 위해 size + 1 조회
+        int limit = pageSize + 1;
+        List<PlaceDistanceView> rows = placeRepository.findByTastingTypeWithCursor(
+                normalizedTypeCode,
+                lastId,
+                limit
+        );
+
+        boolean hasNext = rows.size() > pageSize;
+        List<PlaceDistanceView> page = hasNext ? rows.subList(0, pageSize) : rows;
+
+        List<SpaceItem> items = new ArrayList<>();
+        for (PlaceDistanceView row : page) {
+            Long distanceMeters = null;
+            if (hasLocation && row.getLat() != null && row.getLng() != null) {
+                distanceMeters = Math.round(
+                        haversineMeters(lat, lng, row.getLat().doubleValue(), row.getLng().doubleValue())
+                );
+            }
+
+            items.add(new SpaceItem(
+                    row.getPlaceId(),
+                    row.getName(),
+                    row.getTastingTypeCode(),
+                    toDouble(row.getLat()),
+                    toDouble(row.getLng()),
+                    row.getThumbnailImageUrl(),
+                    row.getAddress(),
+                    distanceMeters
+            ));
+        }
+
+        String nextCursor = null;
+        if (hasNext) {
+            PlaceDistanceView last = page.get(page.size() - 1);
+            SpaceCursor next = new SpaceCursor(last.getPlaceId(), ID_SORT, null);
+            nextCursor = SpaceCursor.encode(next);
+        }
+
+        return new SpaceListResponse(items, new CursorInfo(nextCursor, hasNext));
+    }
+
     public SpaceDetailResponse getSpaceDetail(Long spaceId,
                                               Double lat,
                                               Double lng,
