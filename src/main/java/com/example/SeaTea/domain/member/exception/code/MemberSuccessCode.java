@@ -11,15 +11,9 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum MemberSuccessCode implements BaseCode {
 
-  _FOUND(HttpStatus.OK,
-      "MEMBER200_1",
-      "성공적으로 사용자를 조회했습니다."),
-  _LOGIN_SUCCESS(HttpStatus.OK,
-      "MEMBER200_2",
-      "성공적으로 로그인하였습니다."),
-  _CREATED(HttpStatus.OK,
-      "MEMBER200_3",
-      "회원가입에 성공하였습니다.")
+  _FOUND(HttpStatus.OK, "MEMBER200", "성공적으로 사용자를 조회했습니다."),
+  _LOGIN_SUCCESS(HttpStatus.OK, "MEMBER201", "성공적으로 로그인하였습니다."),
+  _CREATED(HttpStatus.OK, "MEMBER202", "회원가입에 성공하였습니다.")
   ;
 
   private HttpStatus httpStatus;

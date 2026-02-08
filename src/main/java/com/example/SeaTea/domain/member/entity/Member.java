@@ -31,7 +31,7 @@ public class Member extends BaseEntity {
   @Column(nullable = false, unique = true)
   private String email;
 
-  @Column(nullable = false)
+  @Column(nullable = true)
   private String password;
 
   @Column(nullable = false, unique = true)
@@ -44,6 +44,19 @@ public class Member extends BaseEntity {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private Role role; // USER, ADMIN
+
+
+  // 소셜 로그인 식별 정보
+  private String registrationId; // "kakao" 저장
+  private String providerId;     // 카카오의 고유 식별 번호 저장
+
+  // 소셜 로그인 전용 빌더/생성자 혹은 업데이트 메서드
+  public Member updateSocialInfo(String registrationId, String providerId) {
+    this.registrationId = registrationId;
+    this.providerId = providerId;
+    return this;
+  }
+
 
 //  status 탈퇴/차단 처리
 //  @Enumerated(EnumType.STRING)

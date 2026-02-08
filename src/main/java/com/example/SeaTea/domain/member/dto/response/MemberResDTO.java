@@ -16,10 +16,11 @@ public class MemberResDTO {
   // 로그인 (로그인 전용 / 조회 전용 분리 -> 확장)
   @Builder
   public record LoginDTO(
+      // 보안을 위해 비밀번호 포함 X
+      //String password,
       Long id,
       String email,
-      // 보안을 위해 비밀번호 포함 X
-//      String password,
+      String nickname,
       String role,
       String profile_image
   ){}
