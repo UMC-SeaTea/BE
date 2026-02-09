@@ -145,4 +145,3 @@ SeaTea Backend는 **CI/CD 파이프라인 + 컨테이너 기반 인프라**로 �
 6. 리뷰 반영  
 7. Merge (`dev`)  
 8. Pull 최신화  
-9. 브랜치 삭제

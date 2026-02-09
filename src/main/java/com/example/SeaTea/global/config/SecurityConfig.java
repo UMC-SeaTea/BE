@@ -54,6 +54,7 @@ public class SecurityConfig {
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
         .authorizeHttpRequests(requests -> requests
+            .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/spaces/**").permitAll()
             .requestMatchers(allowUris).permitAll()
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
             .anyRequest().authenticated()
@@ -88,6 +89,7 @@ public class SecurityConfig {
 
 //        csrf 비활성화
         .csrf(AbstractHttpConfigurer::disable)
+        .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
         .logout(logout -> logout
                 .logoutUrl("/api/logout")
                 .logoutSuccessHandler(customLogoutSuccessHandler)

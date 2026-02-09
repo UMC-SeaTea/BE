@@ -9,7 +9,8 @@ import org.springframework.http.HttpStatus;
 @Getter
 @AllArgsConstructor
 public enum SpaceErrorStatus implements BaseErrorCode {
-    _INVALID_PARAMS(HttpStatus.BAD_REQUEST, "400", "위치 정보(lat,lng)가 올바르지 않습니다.");
+    _INVALID_PARAMS(HttpStatus.BAD_REQUEST, "PLACE400", "위치 정보(lat,lng)가 올바르지 않습니다."),
+    _NOT_FOUND(HttpStatus.NOT_FOUND, "PLACE404", "공간을 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
