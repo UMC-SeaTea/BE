@@ -3,6 +3,7 @@ package com.example.SeaTea.domain.member.controller;
 import com.example.SeaTea.domain.member.converter.MemberConverter;
 import com.example.SeaTea.domain.member.dto.request.MemberReqDTO;
 import com.example.SeaTea.domain.member.dto.response.MemberResDTO;
+import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import com.example.SeaTea.domain.member.exception.code.MemberSuccessCode;
 import com.example.SeaTea.domain.member.service.command.MemberCommandService;
@@ -66,19 +67,19 @@ public class MemberController {
       return ApiResponse.onFailure(MemberErrorCode._NOT_LOGIN.getCode(),MemberErrorCode._NOT_LOGIN.getMessage(),null);
     }
 
-    String email;
-    String nickname;
-    String role;
-
     if (principal instanceof CustomUserDetails userDetails) {
       // 일반 로그인 유저
-      email = userDetails.getMember().getEmail();
-      nickname = userDetails.getMember().getNickname();
-      role = userDetails.getMember().getRole().toString();
+      Member member = userDetails.getMember();
+
+      return ApiResponse.of(MemberSuccessCode._FOUND, MemberConverter.toLoginDTO(member));
+
     } else if (principal instanceof OAuth2User oAuth2User) {
       // 소셜 로그인 유저 (Map 파싱)
       Map<String, Object> attributes = oAuth2User.getAttributes();
-      nickname = "소셜 유저";
+
+      String role;
+      String email;
+      String nickname = "소셜 유저";
 
       // 카카오 구조에 따른 안전한 파싱
       if (attributes.get("kakao_account") instanceof Map<?, ?> kakaoAccount) {
@@ -96,20 +97,20 @@ public class MemberController {
           .map(GrantedAuthority::getAuthority)
           .findFirst()
           .orElse("ROLE_MEMBER");
+
+      MemberResDTO.LoginDTO result = MemberResDTO.LoginDTO.builder()
+          .email(email)
+          .nickname(nickname)
+          .role(role)
+          .build();
+
+      return ApiResponse.of(MemberSuccessCode._FOUND, result);
+
     } else {
       // 로그인 되지 않은 상태
       return ApiResponse.onFailure(MemberErrorCode._NOT_LOGIN.getCode(),MemberErrorCode._NOT_LOGIN.getMessage(),null);
 //      return ApiResponse.onFailure(MemberErrorCode._INVALID_LOGIN_TYPE.getCode(),MemberErrorCode._INVALID_LOGIN_TYPE.getMessage(),null);
     }
-
-    MemberResDTO.LoginDTO result = MemberResDTO.LoginDTO.builder()
-        .email(email)
-        .nickname(nickname)
-        .role(role)
-        .build();
-
-    // 로그인 완료
-    return ApiResponse.of(MemberSuccessCode._FOUND, result);
   }
 
   // 관리자 테스트

@@ -17,6 +17,16 @@ public class MemberConverter {
         .build();
   }
 
+  public static MemberResDTO.LoginDTO toLoginDTO(Member member) {
+    return MemberResDTO.LoginDTO.builder()
+        .id(member.getId())
+        .email(member.getEmail())
+        .nickname(member.getNickname())
+        .role(member.getRole().toString()) // Enum을 String으로 변환
+        .profile_image(member.getProfile_image())
+        .build();
+  }
+
   // DTO -> Entity
   public static Member toMember(
       MemberReqDTO.JoinDTO dto,
