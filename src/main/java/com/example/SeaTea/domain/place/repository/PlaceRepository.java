@@ -28,6 +28,8 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
         java.math.BigDecimal getLng();
         String getThumbnailImageUrl();
         String getAddress();
+        String getDescription();
+        String getNote();
         Double getDistanceMeters();
     }
 
@@ -41,6 +43,8 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
             p.lng as lng,
             p.thumbnail_image_url as thumbnailImageUrl,
             p.address as address,
+            p.description as description,
+            p.note as note,
             null as distanceMeters
         from place p
         left join tasting_note_type t on t.id = p.tasting_type_id
@@ -65,6 +69,8 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
                 p.lng as lng,
                 p.thumbnail_image_url as thumbnailImageUrl,
                 p.address as address,
+                p.description as description,
+                p.note as note,
                 ST_Distance_Sphere(point(p.lng, p.lat), point(:lng, :lat)) as distanceMeters
             from place p
             left join tasting_note_type t on t.id = p.tasting_type_id
@@ -94,6 +100,8 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
                 p.lng as lng,
                 p.thumbnail_image_url as thumbnailImageUrl,
                 p.address as address,
+                p.description as description,
+                p.note as note,
                 6371000 * 2 * asin(sqrt(
                     power(sin(radians(:lat - p.lat) / 2), 2) +
                     cos(radians(:lat)) * cos(radians(p.lat)) *

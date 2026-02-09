@@ -4,7 +4,7 @@ import com.example.SeaTea.domain.place.dto.SpaceCursor;
 import com.example.SeaTea.domain.place.dto.SpaceDetailResponse;
 import com.example.SeaTea.domain.place.dto.SpaceListResponse;
 import com.example.SeaTea.domain.place.dto.SpaceListResponse.CursorInfo;
-import com.example.SeaTea.domain.place.dto.SpaceListResponse.SpaceItem;
+import com.example.SeaTea.domain.place.dto.SpaceListResponse.SpaceItemWithDescription;
 import com.example.SeaTea.domain.place.entity.Place;
 import com.example.SeaTea.domain.place.repository.MemberSavedPlaceRepository;
 import com.example.SeaTea.domain.place.repository.PlaceRepository;
@@ -88,7 +88,7 @@ public class PlaceQueryService {
         // 2) 사이즈 정규화
         int pageSize = normalizeSize(size);
 
-        // 2) 커서 디코딩 (id 기반 keyset pagination)
+        // 3) 커서 디코딩 (id 기반 keyset pagination)
         SpaceCursor cursorToken = null;
         if (cursor != null) {
             try {
@@ -103,13 +103,13 @@ public class PlaceQueryService {
         }
         Long lastId = cursorToken == null ? null : cursorToken.getLastId();
 
-        // 3) 위치값 검증 + 거리 계산 여부 판단 (표시용)
+        // 4) 위치값 검증 + 거리 계산 여부 판단 (표시용)
         boolean hasLocation = lat != null || lng != null;
         if (hasLocation) {
             validateLocation(lat, lng);
         }
 
-        // 4) 다음 페이지 여부 판단을 위해 size + 1 만큼 조회
+        // 5) 다음 페이지 여부 판단을 위해 size + 1 만큼 조회
         int limit = pageSize + 1;
         List<PlaceDistanceView> rows = placeRepository.findByTastingTypeWithCursor(
                 normalizedTypeCode,
@@ -120,7 +120,7 @@ public class PlaceQueryService {
         boolean hasNext = rows.size() > pageSize;
         List<PlaceDistanceView> page = hasNext ? rows.subList(0, pageSize) : rows;
 
-        List<SpaceItem> items = new ArrayList<>();
+        List<SpaceItemWithDescription> items = new ArrayList<>();
         for (PlaceDistanceView row : page) {
             Long distanceMeters = null;
             if (hasLocation && row.getLat() != null && row.getLng() != null) {
@@ -128,8 +128,10 @@ public class PlaceQueryService {
                         haversineMeters(lat, lng, row.getLat().doubleValue(), row.getLng().doubleValue())
                 );
             }
-
-            items.add(new SpaceItem(
+            String description = row.getDescription() != null && !row.getDescription().isBlank()
+                    ? row.getDescription()
+                    : row.getNote();
+            items.add(new SpaceItemWithDescription(
                     row.getPlaceId(),
                     row.getName(),
                     row.getTastingTypeCode(),
@@ -137,6 +139,7 @@ public class PlaceQueryService {
                     toDouble(row.getLng()),
                     row.getThumbnailImageUrl(),
                     row.getAddress(),
+                    description,
                     distanceMeters
             ));
         }
@@ -223,9 +226,9 @@ public class PlaceQueryService {
         boolean hasNext = rows.size() > size;
         List<PlaceDistanceView> page = hasNext ? rows.subList(0, size) : rows;
 
-        List<SpaceItem> items = new ArrayList<>();
+        List<SpaceListResponse.SpaceItem> items = new ArrayList<>();
         for (PlaceDistanceView row : page) {
-            items.add(new SpaceItem(
+            items.add(new SpaceListResponse.SpaceItem(
                     row.getPlaceId(),
                     row.getName(),
                     row.getTastingTypeCode(),
@@ -260,9 +263,9 @@ public class PlaceQueryService {
         boolean hasNext = rows.size() > size;
         List<Place> page = hasNext ? rows.subList(0, size) : rows;
 
-        List<SpaceItem> items = new ArrayList<>();
+        List<SpaceListResponse.SpaceItem> items = new ArrayList<>();
         for (Place place : page) {
-            items.add(new SpaceItem(
+            items.add(new SpaceListResponse.SpaceItem(
                     place.getPlaceId(),
                     place.getName(),
                     place.getTastingType() == null ? null : place.getTastingType().getCode(),
@@ -384,7 +387,7 @@ public class PlaceQueryService {
         int take = Math.min(3, rows.size());
         List<PlaceDistanceView> page = rows.subList(0, take);
 
-        List<SpaceItem> items = new ArrayList<>();
+        List<SpaceItemWithDescription> items = new ArrayList<>();
         for (PlaceDistanceView row : page) {
             Long distanceMeters = null;
             if (hasLocation && row.getLat() != null && row.getLng() != null) {
@@ -392,8 +395,10 @@ public class PlaceQueryService {
                         haversineMeters(lat, lng, row.getLat().doubleValue(), row.getLng().doubleValue())
                 );
             }
-
-            items.add(new SpaceItem(
+            String description = row.getDescription() != null && !row.getDescription().isBlank()
+                    ? row.getDescription()
+                    : row.getNote();
+            items.add(new SpaceItemWithDescription(
                     row.getPlaceId(),
                     row.getName(),
                     row.getTastingTypeCode(),
@@ -401,6 +406,7 @@ public class PlaceQueryService {
                     toDouble(row.getLng()),
                     row.getThumbnailImageUrl(),
                     row.getAddress(),
+                    description,
                     distanceMeters
             ));
         }

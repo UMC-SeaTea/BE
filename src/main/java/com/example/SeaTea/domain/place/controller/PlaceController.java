@@ -67,7 +67,6 @@ public class PlaceController {
     }
 
     // 타입 내 랜덤 추천 3개 (사용자 노출용 추천)
-    // 현재는 기존 조회 로직을 재사용하여 size=3으로 제한합니다. (랜덤화는 서비스 로직에서 적용 권장)
     @GetMapping("/recommend")
     @Operation(summary = "공간 추천(랜덤 3개)", description = "휴식유형(tastingTypeCode)에 해당하는 공간 중 3개를 추천합니다.")
     public ApiResponse<SpaceListResponse> recommend3Spaces(
