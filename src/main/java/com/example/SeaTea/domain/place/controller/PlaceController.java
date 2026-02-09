@@ -4,6 +4,7 @@ import com.example.SeaTea.domain.diagnosis.enums.TastingNoteTypeCode;
 
 import com.example.SeaTea.domain.place.dto.SpaceListResponse;
 import com.example.SeaTea.domain.place.service.PlaceQueryService;
+import com.example.SeaTea.domain.place.dto.SpaceBoundsResponse;
 import com.example.SeaTea.domain.place.dto.SpaceDetailResponse;
 import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.global.auth.CustomUserDetails;
@@ -96,6 +97,23 @@ public class PlaceController {
         Member member = userDetails == null ? null : userDetails.getMember();
         return ApiResponse.onSuccess(
             placeQueryService.getSpaceDetail(spaceId, lat, lng, member)
+        );
+    }
+
+    @GetMapping("/bounds")
+    @Operation(summary = "지도 영역 공간 조회", description = "지도 영역 좌표로 공간 목록을 조회합니다.")
+    public ApiResponse<SpaceBoundsResponse> getSpacesByBounds(
+        @Parameter(description = "남서 위도")
+        @RequestParam Double southWestLat,
+        @Parameter(description = "남서 경도")
+        @RequestParam Double southWestLng,
+        @Parameter(description = "북동 위도")
+        @RequestParam Double northEastLat,
+        @Parameter(description = "북동 경도")
+        @RequestParam Double northEastLng
+    ) {
+        return ApiResponse.onSuccess(
+            placeQueryService.getSpacesByBounds(southWestLat, southWestLng, northEastLat, northEastLng)
         );
     }
 }

@@ -123,4 +123,15 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
                                                        @Param("lastDistance") Double lastDistance,
                                                        @Param("lastId") Long lastId,
                                                        @Param("limit") int limit);
+
+    @Query("""
+        select p from Place p
+        where p.lat between :southWestLat and :northEastLat
+          and p.lng between :southWestLng and :northEastLng
+        order by p.placeId asc
+        """)
+    List<Place> findByBounds(@Param("southWestLat") java.math.BigDecimal southWestLat,
+                             @Param("southWestLng") java.math.BigDecimal southWestLng,
+                             @Param("northEastLat") java.math.BigDecimal northEastLat,
+                             @Param("northEastLng") java.math.BigDecimal northEastLng);
 }

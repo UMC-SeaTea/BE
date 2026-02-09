@@ -1,6 +1,8 @@
 package com.example.SeaTea.domain.place.service;
 
 import com.example.SeaTea.domain.place.dto.SpaceCursor;
+import com.example.SeaTea.domain.place.dto.SpaceBoundsResponse;
+import com.example.SeaTea.domain.place.dto.SpaceBoundsResponse.SpaceBoundsItem;
 import com.example.SeaTea.domain.place.dto.SpaceDetailResponse;
 import com.example.SeaTea.domain.place.dto.SpaceListResponse;
 import com.example.SeaTea.domain.place.dto.SpaceListResponse.CursorInfo;
@@ -210,6 +212,33 @@ public class PlaceQueryService {
         );
     }
 
+    public SpaceBoundsResponse getSpacesByBounds(Double southWestLat,
+                                                 Double southWestLng,
+                                                 Double northEastLat,
+                                                 Double northEastLng) {
+        validateBounds(southWestLat, southWestLng, northEastLat, northEastLng);
+
+        List<Place> places = placeRepository.findByBounds(
+            BigDecimal.valueOf(southWestLat),
+            BigDecimal.valueOf(southWestLng),
+            BigDecimal.valueOf(northEastLat),
+            BigDecimal.valueOf(northEastLng)
+        );
+
+        List<SpaceBoundsItem> items = new ArrayList<>();
+        for (Place place : places) {
+            items.add(new SpaceBoundsItem(
+                place.getPlaceId(),
+                place.getName(),
+                place.getTastingType() == null ? null : place.getTastingType().getCode(),
+                toDouble(place.getLat()),
+                toDouble(place.getLng())
+            ));
+        }
+
+        return new SpaceBoundsResponse(items);
+    }
+
     private SpaceListResponse fetchByDistance(double lat,
                                               double lng,
                                               String keyword,
@@ -320,6 +349,26 @@ public class PlaceQueryService {
 
     private Double toDouble(BigDecimal value) {
         return value == null ? null : value.doubleValue();
+    }
+
+    private void validateBounds(Double southWestLat,
+                                Double southWestLng,
+                                Double northEastLat,
+                                Double northEastLng) {
+        if (southWestLat == null || southWestLng == null || northEastLat == null || northEastLng == null) {
+            throw new GeneralException(SpaceErrorStatus._INVALID_BOUNDS);
+        }
+        if (!Double.isFinite(southWestLat) || !Double.isFinite(southWestLng)
+            || !Double.isFinite(northEastLat) || !Double.isFinite(northEastLng)) {
+            throw new GeneralException(SpaceErrorStatus._INVALID_BOUNDS);
+        }
+        if (southWestLat < -90 || southWestLat > 90 || northEastLat < -90 || northEastLat > 90
+            || southWestLng < -180 || southWestLng > 180 || northEastLng < -180 || northEastLng > 180) {
+            throw new GeneralException(SpaceErrorStatus._INVALID_BOUNDS);
+        }
+        if (southWestLat > northEastLat || southWestLng > northEastLng) {
+            throw new GeneralException(SpaceErrorStatus._INVALID_BOUNDS);
+        }
     }
 
     private double haversineMeters(double lat1, double lng1, double lat2, double lng2) {
