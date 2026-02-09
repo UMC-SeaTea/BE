@@ -11,11 +11,13 @@ import org.springframework.http.HttpStatus;
 public enum MemberErrorCode implements BaseErrorCode {
 
   // for test
-  _NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER404_1", "사용자가 존재하지 않습니다"),
-  _LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "MEMBER404_2", "로그인에 실패했습니다(인증 실패 / 아이디 비번 불일치)"),
-  _CONFLICT_EMAIL(HttpStatus.CONFLICT, "MEMBER404_3", "중복되는 이메일입니다."),
-  _CONFLICT_NICKNAME(HttpStatus.CONFLICT, "MEMBER404_4", "중복되는 닉네임입니다."),
-  _DIFFERENT_PW(HttpStatus.BAD_REQUEST, "MEMBER404_5", "비밀번호와 비밀번호 확인이 다릅니다.")
+  _NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER400", "사용자가 존재하지 않습니다"),
+  _LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "MEMBER401", "로그인에 실패했습니다(인증 실패 / 아이디 비번 불일치)"),
+  _CONFLICT_EMAIL(HttpStatus.CONFLICT, "MEMBER402", "중복되는 이메일입니다."),
+  _CONFLICT_NICKNAME(HttpStatus.CONFLICT, "MEMBER403", "중복되는 닉네임입니다."),
+  _DIFFERENT_PW(HttpStatus.BAD_REQUEST, "MEMBER404", "비밀번호와 비밀번호 확인이 다릅니다."),
+  _NOT_LOGIN(HttpStatus.UNAUTHORIZED, "MEMBER405", "로그인되지 않은 상태입니다."),
+  _INVALID_LOGIN_TYPE(HttpStatus.BAD_REQUEST, "MEMBER406", "지원하지 않는 로그인 형식입니다."),
   ;
 
 

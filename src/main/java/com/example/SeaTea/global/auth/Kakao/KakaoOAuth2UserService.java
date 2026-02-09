@@ -1,0 +1,69 @@
+package com.example.SeaTea.global.auth.Kakao;
+
+import com.example.SeaTea.domain.member.entity.Member;
+import com.example.SeaTea.domain.member.repository.MemberRepository;
+import com.example.SeaTea.global.auth.enums.Role;
+import java.util.Collections;
+import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class KakaoOAuth2UserService extends DefaultOAuth2UserService {
+
+  private final MemberRepository memberRepository;
+
+  @Override
+  public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+    // 카카오에서 가져온 기본 유저 정보들
+    OAuth2User oAuth2User = super.loadUser(userRequest);
+    // 어느 소셜 서비스인지 확인 (현재 kakao만 연결)
+    String registrationId = userRequest.getClientRegistration().getRegistrationId();
+    // 카카오 응답 데이터 가공
+    KakaoMemberInfo kakaoResponse = new KakaoMemberInfo(oAuth2User.getAttributes());
+
+    Map<String, Object> attributes = oAuth2User.getAttributes();
+
+    String email = kakaoResponse.getEmail();
+    String nickname = kakaoResponse.getName();
+    String providerId = kakaoResponse.getProviderId();
+
+    if (nickname == null || nickname.trim().isEmpty()) {
+      // [Speculation] 닉네임이 없을 경우를 대비한 기본값 설정
+      nickname = "KakaoUser_" + attributes.get("id");
+    }
+
+    // 4. Member 저장 및 업데이트 로직
+    Member member = saveOrUpdate(email, nickname, registrationId, providerId);
+
+    // 5. 세션에 저장할 유저 객체 반환
+    return new DefaultOAuth2User(
+        Collections.singleton(new SimpleGrantedAuthority(member.getRole().getKey())),
+        oAuth2User.getAttributes(),
+        "id" // 카카오는 id를 식별자로 사용 (yml의 user-name-attribute와 동일해야 함)
+    );
+  }
+
+  private Member saveOrUpdate(String email, String nickname, String provider, String providerId) {
+    return memberRepository.findByEmail(email)
+//        .map(entity -> entity.update(nickname)) // 이미 있으면 이름 업데이트
+        .orElseGet(() -> memberRepository.save( // 없으면 새로 생성(회원가입)
+            Member.builder()
+                .nickname(nickname)
+                .email(email)
+                .role(Role.ROLE_MEMBER)
+//                .provider(provider)
+                .providerId(providerId)
+                .build()
+        ));
+  }
+
+}
