@@ -16,7 +16,7 @@ public class CorsConfig {
 
     // 허용 오리진 목록
     configuration.setAllowedOrigins(
-        List.of("http://localhost:5173", "https://seatea-site.vercel.app"));
+        List.of("http://localhost:5173", "https://seatea-site.vercel.app", "https://seatea.site", "https://www.seatea.site"));
     configuration.addAllowedHeader("*");
     configuration.setExposedHeaders(List.of("access", "Authorization"));
     configuration.setAllowedMethods(
