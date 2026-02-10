@@ -22,8 +22,20 @@ public class JwtTokenProvider {
 
   // yml로 token 안전하게 가져오기
   public JwtTokenProvider(@Value("${jwt.secret}") String secretKey) {
-    byte[] keyBytes = Decoders.BASE64.decode(Base64.getEncoder().encodeToString(secretKey.getBytes()));
-    this.key = Keys.hmacShaKeyFor(keyBytes);
+//    byte[] keyBytes = Decoders.BASE64.decode(Base64.getEncoder().encodeToString(secretKey.getBytes()));
+//    byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+//    this.key = Keys.hmacShaKeyFor(keyBytes);
+    if (secretKey == null || secretKey.isEmpty()) {
+      throw new IllegalArgumentException("SECRET_TOKEN 환경 변수가 설정되지 않았습니다!");
+    }
+
+    // 2. 만약 ${SECRET_TOKEN} 문자열이 그대로 들어왔다면 에러 발생
+    if (secretKey.equals("${SECRET_TOKEN}")) {
+      throw new IllegalArgumentException("환경 변수 치환에 실패했습니다. 설정을 확인하세요.");
+    }
+
+    // 3. HMAC SHA 키 생성
+    this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
   }
 
   public String createAccessToken(Authentication authentication) {

@@ -56,11 +56,21 @@ public class Member extends BaseEntity {
     this.isNewUser = true;
   }
 
+  // 회원가입 후 false로 변경
+  public void offNewUser() {
+    this.isNewUser = false;
+  }
+
   // 소셜 로그인 전용 빌더/생성자 혹은 업데이트 메서드
   public Member updateSocialInfo(String registrationId, String providerId) {
     this.registrationId = registrationId;
     this.providerId = providerId;
     return this;
+  }
+
+  // 닉네임 업데이트
+  public void updateNickname(String newNickname) {
+    this.nickname = newNickname;
   }
 
 

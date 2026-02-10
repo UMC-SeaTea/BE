@@ -1,6 +1,7 @@
 package com.example.SeaTea.domain.member.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class MemberReqDTO {
 
@@ -16,5 +17,12 @@ public class MemberReqDTO {
       String nickname,
       String profile_url
   ) {}
+
+  // 닉네임 업데이트
+  public record UpdateNicknameDTO(
+      @NotBlank
+      @Size(min = 2, max = 10)
+      String newNickname
+  ){}
 
 }

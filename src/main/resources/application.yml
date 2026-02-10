@@ -46,3 +46,6 @@ server:
 
 jwt:
   secret: ${SECRET_TOKEN}
+
+app:
+  frontend-callback-url: ${FRONTEND_CALLBACK_URL}

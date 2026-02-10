@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -41,10 +42,10 @@ public class KakaoOAuth2UserService extends DefaultOAuth2UserService {
       nickname = "KakaoUser_" + attributes.get("id");
     }
 
-    // 4. Member 저장 및 업데이트 로직
+    // Member 저장 및 업데이트 로직
     Member member = saveOrUpdate(email, nickname, registrationId, providerId);
 
-    // 5. 세션에 저장할 유저 객체 반환
+    // 세션에 저장할 유저 객체 반환
     return new DefaultOAuth2User(
         Collections.singleton(new SimpleGrantedAuthority(member.getRole().getKey())),
         oAuth2User.getAttributes(),
@@ -52,9 +53,11 @@ public class KakaoOAuth2UserService extends DefaultOAuth2UserService {
     );
   }
 
+//  @Transactional
   private Member saveOrUpdate(String email, String nickname, String registerId, String providerId) {
     return memberRepository.findByEmail(email)
         .map(entity -> entity.updateSocialInfo(registerId, providerId)) // 이미 있으면 이름 업데이트
+//        .map(entity -> memberRepository.save(entity.updateSocialInfo(registerId, providerId)))
         .orElseGet(() -> {
           // 신규 가입
               Member newMember = Member.builder()

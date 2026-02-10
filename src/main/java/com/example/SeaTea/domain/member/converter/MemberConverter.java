@@ -4,6 +4,7 @@ import com.example.SeaTea.domain.member.dto.request.MemberReqDTO;
 import com.example.SeaTea.domain.member.dto.response.MemberResDTO;
 import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.global.auth.enums.Role;
+import java.time.LocalDateTime;
 
 public class MemberConverter {
 
@@ -39,6 +40,15 @@ public class MemberConverter {
         .role(role)
         .nickname(dto.nickname())
 //        .profile_image(dto.profile_image())
+        .build();
+  }
+
+  // 닉네임 변경
+  public static MemberResDTO.UpdateNicknameResultDTO toUpdateNicknameResultDTO(Member member) {
+    return MemberResDTO.UpdateNicknameResultDTO.builder()
+        .id(member.getId())
+        .nickname(member.getNickname())
+        .updatedAt(LocalDateTime.now())
         .build();
   }
 

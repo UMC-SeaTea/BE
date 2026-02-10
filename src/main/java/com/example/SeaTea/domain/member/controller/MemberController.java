@@ -7,7 +7,6 @@ import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import com.example.SeaTea.domain.member.exception.code.MemberSuccessCode;
 import com.example.SeaTea.domain.member.service.command.MemberCommandService;
-import com.example.SeaTea.domain.member.service.query.MemberQueryService;
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
 import com.example.SeaTea.global.auth.CustomUserDetails;
 import com.example.SeaTea.global.status.SuccessStatus;
@@ -18,6 +17,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,7 +30,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api")
 public class MemberController {
 
-  private final MemberQueryService memberQueryService;
   private final MemberCommandService memberCommandService;
 
   // 회원가입 정보 입력 페이지
@@ -53,6 +52,7 @@ public class MemberController {
     memberCommandService.checkEmailDuplication(email);
     return ApiResponse.onSuccess("사용 가능한 이메일입니다.");
   }
+
   @GetMapping("/check/nickname")
   public ApiResponse<String> checkNickname(@RequestParam String nickname) {
     memberCommandService.checkNicknameDuplication(nickname);
@@ -111,6 +111,20 @@ public class MemberController {
       return ApiResponse.onFailure(MemberErrorCode._NOT_LOGIN.getCode(),MemberErrorCode._NOT_LOGIN.getMessage(),null);
 //      return ApiResponse.onFailure(MemberErrorCode._INVALID_LOGIN_TYPE.getCode(),MemberErrorCode._INVALID_LOGIN_TYPE.getMessage(),null);
     }
+  }
+
+  // 닉네임 변경 api
+  @PatchMapping("/users/me/nickname")
+  public ApiResponse<MemberResDTO.UpdateNicknameResultDTO> updateNickname(
+      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @RequestBody @Valid MemberReqDTO.UpdateNicknameDTO dto
+  ) {
+    if (userDetails == null) {
+      return ApiResponse.onFailure(MemberErrorCode._NOT_LOGIN.getCode(), MemberErrorCode._NOT_LOGIN.getMessage(), null);
+    }
+
+    Member member = userDetails.getMember();
+    return ApiResponse.onSuccess(memberCommandService.updateNickname(member, dto));
   }
 
   // 관리자 테스트

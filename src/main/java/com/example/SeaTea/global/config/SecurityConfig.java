@@ -1,5 +1,6 @@
 package com.example.SeaTea.global.config;
 
+import com.example.SeaTea.domain.member.entity.JsonLoginFilter;
 import com.example.SeaTea.global.auth.Kakao.KakaoOAuth2UserService;
 import com.example.SeaTea.global.config.handler.CustomFailureHandler;
 import com.example.SeaTea.global.config.handler.CustomLogoutSuccessHandler;
@@ -8,6 +9,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -26,6 +29,7 @@ public class SecurityConfig {
   private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
   private final KakaoOAuth2UserService kakaoOAuth2UserService;
   private final CorsConfigurationSource corsConfigurationSource;
+  private final AuthenticationConfiguration authenticationConfiguration;
 
   private final String[] allowUris = {
       "/api/login",
@@ -51,6 +55,26 @@ public class SecurityConfig {
   };
 
   @Bean
+  public AuthenticationManager authenticationManager() throws Exception {
+    return authenticationConfiguration.getAuthenticationManager();
+  }
+
+  @Bean
+  public JsonLoginFilter jsonLoginFilter() throws Exception {
+    JsonLoginFilter filter = new JsonLoginFilter();
+    // 필터에 AuthenticationManager 설정
+    filter.setAuthenticationManager(authenticationManager());
+
+    // 핸들러 커스텀 필터에 연결
+    filter.setAuthenticationSuccessHandler(customSuccessHandler);
+    filter.setAuthenticationFailureHandler(customFailureHandler);
+
+    // 만약 로그인이 수행될 URL을 필터 생성자 외에 여기서도 지정
+     filter.setFilterProcessesUrl("/api/login");
+     return filter;
+  }
+
+  @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
         .authorizeHttpRequests(requests -> requests
@@ -60,31 +84,35 @@ public class SecurityConfig {
             .anyRequest().authenticated()
         )
 
-        .formLogin(form -> form
-                .loginProcessingUrl("/api/login")
-                .usernameParameter("email")
-                .passwordParameter("password")
-                .successHandler(customSuccessHandler)
-                .failureHandler(customFailureHandler)
-                .permitAll()
-//                .defaultSuccessUrl("/swagger-ui/index.html", true)
-        )
+//        .formLogin(form -> form
+//                .loginProcessingUrl("/api/login")
+//                .usernameParameter("email")
+//                .passwordParameter("password")
+//                .successHandler(customSuccessHandler)
+//                .failureHandler(customFailureHandler)
+//                .permitAll()
+////                .defaultSuccessUrl("/swagger-ui/index.html", true)
+//        )
 
         // 소셜 로그인 설정
         // 로그인 시작 주소: http://localhost:8080/oauth2/authorization/kakao
         // 콜백 주소: /login/oauth2/code/kakao
         .oauth2Login(oauth2 -> oauth2
-            .loginProcessingUrl("/api/callback")
+                .successHandler(customSuccessHandler)
+                .failureHandler(customFailureHandler)
+                .userInfoEndpoint(userInfo -> userInfo
+                    .userService(kakaoOAuth2UserService)
+                )
 
-            // 미인증 접근 시 Security가 401 Unauthorized 대신 설정된 /api/login로 로드
+//            .loginProcessingUrl("/api/callback")
+//             미인증 접근 시 Security가 401 Unauthorized 대신 설정된 /api/login로 로드
 //            .loginPage("/api/login")
-
             // success/failure Handler로 더 상세하게
-            .defaultSuccessUrl("/api/users/me", true)
-            .failureUrl("/api/users/me")
-            .userInfoEndpoint(userInfo -> userInfo
-                .userService(kakaoOAuth2UserService)
-            )
+//            .defaultSuccessUrl("/api/users/me", true)
+//            .failureUrl("/api/users/me")
+//            .userInfoEndpoint(userInfo -> userInfo
+//                .userService(kakaoOAuth2UserService)
+//            )
         )
 
 //        csrf 비활성화
@@ -105,6 +133,8 @@ public class SecurityConfig {
           })
         );
 
+    // 커스텀 JSON 필터를 UsernamePasswordAuthenticationFilter 위치에 추가
+    http.addFilterAt(jsonLoginFilter(), org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 
     // CORS 설정
     http.cors(cors -> cors.configurationSource(corsConfigurationSource));

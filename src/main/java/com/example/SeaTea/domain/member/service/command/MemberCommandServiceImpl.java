@@ -51,7 +51,6 @@ public class MemberCommandServiceImpl implements MemberCommandService {
   @Transactional(readOnly = true)
   public void checkEmailDuplication(String email) {
     if (memberRepository.existsByEmail(email)) {
-
       throw new MemberException(MemberErrorCode._CONFLICT_EMAIL);
     }
   }
@@ -60,9 +59,23 @@ public class MemberCommandServiceImpl implements MemberCommandService {
   @Transactional(readOnly = true)
   public void checkNicknameDuplication(String nickname) {
     if (memberRepository.existsByNickname(nickname)) {
-
       throw new MemberException(MemberErrorCode._CONFLICT_NICKNAME);
     }
+  }
+
+  @Override
+  @Transactional
+  public MemberResDTO.UpdateNicknameResultDTO updateNickname(Member member, MemberReqDTO.UpdateNicknameDTO dto) {
+    // 닉네임 중복 체크
+    checkNicknameDuplication(dto.newNickname());
+
+    // 닉네임 변경 (Dirty Checking 활용)
+    member.updateNickname(dto.newNickname());
+
+    // 가독성이나 즉각적인 반영(save를 호출하지 않아도 @Transactional에 의해 변경 감지(Dirty Checking))
+    memberRepository.save(member);
+
+    return MemberConverter.toUpdateNicknameResultDTO(member);
   }
 
 }

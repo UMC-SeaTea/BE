@@ -25,6 +25,19 @@ public class MemberResDTO {
       String profile_image
   ){}
 
+  public record LoginRequestDTO(
+      String email,
+      String password
+  ){}
+
+  // 닉네임 업데이트 결과
+  @Builder
+  public record UpdateNicknameResultDTO(
+      Long id,
+      String nickname,
+      LocalDateTime updatedAt
+  ){}
+
   // 테스트
   @Builder
   @Getter
