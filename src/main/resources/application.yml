@@ -49,3 +49,6 @@ jwt:
 
 app:
   frontend-callback-url: ${FRONTEND_CALLBACK_URL}
+
+file:
+  upload-dir: ${user.home}${IMAGE_UPLOAD}

@@ -39,6 +39,7 @@ public class SecurityConfig {
       "/v3/api-docs/**",
       "/error",
       "/api/users/me",
+      "/api/images/uploads/**",
 
       // api 연동 확인할 때만 선택적으로 주석 풀어서 하기(주석 풀면 인증 없이 /api/** 모든 접근 가능)
 //      "/api/**",

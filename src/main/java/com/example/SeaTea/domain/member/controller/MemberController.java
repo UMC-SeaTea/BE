@@ -8,6 +8,7 @@ import com.example.SeaTea.domain.member.exception.MemberException;
 import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import com.example.SeaTea.domain.member.exception.code.MemberSuccessCode;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
+import com.example.SeaTea.domain.member.service.command.ImageService;
 import com.example.SeaTea.domain.member.service.command.MemberCommandService;
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
 import com.example.SeaTea.global.auth.CustomUserDetails;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 // 테스트
 @RestController
@@ -149,6 +151,18 @@ public class MemberController {
 
     return ApiResponse.onSuccess(memberCommandService.updateNickname(member, dto));
   }
+
+  private final ImageService imageService;
+
+  @PostMapping("/upload/profile/image")
+  public ApiResponse<String> uploadProfileImage(@RequestParam("file") MultipartFile file) {
+    if (file.isEmpty()) {
+      return ApiResponse.onFailure(MemberErrorCode._FILE_EMPTY.getCode(), MemberErrorCode._FILE_EMPTY.getMessage(), null);
+    }
+    String imageUrl = imageService.upload(file);
+    return ApiResponse.onSuccess(imageUrl);
+  }
+
 
   // 관리자 테스트
   @GetMapping("/admin/test")

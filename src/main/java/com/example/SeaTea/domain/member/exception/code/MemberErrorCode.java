@@ -17,6 +17,7 @@ public enum MemberErrorCode implements BaseErrorCode {
   _CONFLICT_NICKNAME(HttpStatus.CONFLICT, "MEMBER403", "중복되는 닉네임입니다."),
   _DIFFERENT_PW(HttpStatus.BAD_REQUEST, "MEMBER404", "비밀번호와 비밀번호 확인이 다릅니다."),
   _NOT_LOGIN(HttpStatus.UNAUTHORIZED, "MEMBER405", "로그인되지 않은 상태입니다."),
+  _FILE_EMPTY(HttpStatus.BAD_REQUEST, "MEMBER406", "파일이 비어있습니다."),
 
   // 일반 로그인 및 카카오 로그인 이외 로그인 시도
   // _INVALID_LOGIN_TYPE(HttpStatus.BAD_REQUEST, "MEMBER406", "지원하지 않는 로그인 형식입니다."),
