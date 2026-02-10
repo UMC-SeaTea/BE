@@ -14,4 +14,6 @@ public interface MemberCommandService {
 
   void checkEmailDuplication(String email);
   void checkNicknameDuplication(String nickname);
+
+  boolean isNicknameDuplicated(String nickname);
 }

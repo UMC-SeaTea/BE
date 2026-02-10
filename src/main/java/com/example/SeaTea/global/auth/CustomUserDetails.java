@@ -3,18 +3,39 @@ package com.example.SeaTea.global.auth;
 import com.example.SeaTea.domain.member.entity.Member;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
-@RequiredArgsConstructor
-public class CustomUserDetails implements UserDetails {
+public class CustomUserDetails implements UserDetails, OAuth2User {
 
+  @Getter
   private final Member member;
+  private Map<String, Object> attributes; // 소셜 로그인용 속성 저장
 
-//  CustomSuccessHandler에서 Member 가져오기
-  public Member getMember() {
-    return member;
+  // 일반 로그인용 생성자
+  public CustomUserDetails(Member member) {
+    this.member = member;
+  }
+
+  // 소셜 로그인용 생성자
+  public CustomUserDetails(Member member, Map<String, Object> attributes) {
+    this.member = member;
+    this.attributes = attributes;
+  }
+
+
+  @Override
+  public Map<String, Object> getAttributes() {
+    return attributes;
+  }
+
+  @Override
+  public String getName() {
+    return member.getEmail();
   }
 
   @Override

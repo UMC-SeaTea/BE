@@ -4,8 +4,10 @@ import com.example.SeaTea.domain.member.converter.MemberConverter;
 import com.example.SeaTea.domain.member.dto.request.MemberReqDTO;
 import com.example.SeaTea.domain.member.dto.response.MemberResDTO;
 import com.example.SeaTea.domain.member.entity.Member;
+import com.example.SeaTea.domain.member.exception.MemberException;
 import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import com.example.SeaTea.domain.member.exception.code.MemberSuccessCode;
+import com.example.SeaTea.domain.member.repository.MemberRepository;
 import com.example.SeaTea.domain.member.service.command.MemberCommandService;
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
 import com.example.SeaTea.global.auth.CustomUserDetails;
@@ -31,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
 
   private final MemberCommandService memberCommandService;
+  private final MemberRepository memberRepository;
 
   // 회원가입 정보 입력 페이지
   @GetMapping("/sign-up")
@@ -114,7 +117,7 @@ public class MemberController {
   }
 
   // 닉네임 변경 api
-  @PatchMapping("/users/me/nickname")
+  @PatchMapping("/users/me/change/nickname")
   public ApiResponse<MemberResDTO.UpdateNicknameResultDTO> updateNickname(
       @AuthenticationPrincipal CustomUserDetails userDetails,
       @RequestBody @Valid MemberReqDTO.UpdateNicknameDTO dto
@@ -124,6 +127,26 @@ public class MemberController {
     }
 
     Member member = userDetails.getMember();
+
+    // Principal 타입에 따른 Member 추출
+//    if (principal instanceof CustomUserDetails userDetails) {
+//      // 일반 로그인
+//      member = userDetails.getMember();
+//    } else if (principal instanceof OAuth2User oAuth2User) {
+//      // 소셜 로그인 OAuth2User에서 email 추출 후 DB 조회
+//       String email = extractEmailFromOAuth2User(oAuth2User);
+//       member = memberRepository.findByEmail(email)
+//           .orElseThrow(() -> new MemberException(MemberErrorCode._NOT_LOGIN));
+//    }
+//    if(member == null){
+//      return ApiResponse.onFailure(MemberErrorCode._NOT_LOGIN.getCode(), MemberErrorCode._NOT_LOGIN.getMessage(), null);
+//    }
+
+    // 닉네임 중복 체크 (ApiResponse로 에러 반환)
+    if (memberCommandService.isNicknameDuplicated(dto.newNickname())) {
+      return ApiResponse.onFailure(MemberErrorCode._CONFLICT_NICKNAME.getCode(), MemberErrorCode._CONFLICT_NICKNAME.getMessage(), null);
+    }
+
     return ApiResponse.onSuccess(memberCommandService.updateNickname(member, dto));
   }
 
@@ -147,4 +170,23 @@ public class MemberController {
 //    SuccessStatus code = SuccessStatus._OK;
 //    return ApiResponse.onSuccess(MemberConverter.toExceptionsDTO("I'm testing"));
 //  }
+
+  // 소셜 로그인한 계정 이메일 가져오기
+  private String extractEmailFromOAuth2User(OAuth2User oAuth2User) {
+    Map<String, Object> attributes = oAuth2User.getAttributes();
+
+    // 카카오 로그인일 경우의 처리 (이미 작성하신 getMyInfo 로직의 구조를 참고함)
+    if (attributes.get("kakao_account") instanceof Map<?, ?> kakaoAccount) {
+      return (String) kakaoAccount.get("email");
+    }
+
+    // 구글이나 기타 서비스일 경우 (기본적으로 "email" 키를 사용한다고 가정)
+    Object email = attributes.get("email");
+    if (email == null) {
+      // 이메일 권한이 없거나 식별할 수 없는 경우에 대한 처리 (Speculation: 추측)
+      return null;
+    }
+
+    return email.toString();
+  }
 }

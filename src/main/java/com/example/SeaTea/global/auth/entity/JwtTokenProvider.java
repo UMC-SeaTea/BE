@@ -29,13 +29,18 @@ public class JwtTokenProvider {
       throw new IllegalArgumentException("SECRET_TOKEN 환경 변수가 설정되지 않았습니다!");
     }
 
-    // 2. 만약 ${SECRET_TOKEN} 문자열이 그대로 들어왔다면 에러 발생
-    if (secretKey.equals("${SECRET_TOKEN}")) {
+    // 만약 ${SECRET_TOKEN} 문자열이 그대로 들어왔다면 에러 발생
+    if (secretKey.equals("${jwt.secret}")) {
       throw new IllegalArgumentException("환경 변수 치환에 실패했습니다. 설정을 확인하세요.");
     }
 
-    // 3. HMAC SHA 키 생성
-    this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+    // HMAC SHA 키 생성
+    byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
+    if (keyBytes.length < 32) {
+      throw new IllegalArgumentException("JWT secret은 최소 32바이트(256비트) 이상이어야 합니다.");
+    }
+    this.key = Keys.hmacShaKeyFor(keyBytes);
+//    this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
   }
 
   public String createAccessToken(Authentication authentication) {

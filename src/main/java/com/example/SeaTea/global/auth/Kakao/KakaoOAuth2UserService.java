@@ -2,6 +2,7 @@ package com.example.SeaTea.global.auth.Kakao;
 
 import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
+import com.example.SeaTea.global.auth.CustomUserDetails;
 import com.example.SeaTea.global.auth.enums.Role;
 import java.util.Collections;
 import java.util.Map;
@@ -46,15 +47,16 @@ public class KakaoOAuth2UserService extends DefaultOAuth2UserService {
     Member member = saveOrUpdate(email, nickname, registrationId, providerId);
 
     // 세션에 저장할 유저 객체 반환
-    return new DefaultOAuth2User(
-        Collections.singleton(new SimpleGrantedAuthority(member.getRole().getKey())),
-        oAuth2User.getAttributes(),
-        "id" // 카카오는 id를 식별자로 사용 (yml의 user-name-attribute와 동일해야 함)
-    );
+    return new CustomUserDetails(member, oAuth2User.getAttributes());
+//    return new DefaultOAuth2User(
+//        Collections.singleton(new SimpleGrantedAuthority(member.getRole().getKey())),
+//        oAuth2User.getAttributes(),
+//        "id" // 카카오는 id를 식별자로 사용 (yml의 user-name-attribute와 동일해야 함)
+//    );
   }
 
-//  @Transactional
-  private Member saveOrUpdate(String email, String nickname, String registerId, String providerId) {
+  @Transactional
+  public Member saveOrUpdate(String email, String nickname, String registerId, String providerId) {
     return memberRepository.findByEmail(email)
         .map(entity -> entity.updateSocialInfo(registerId, providerId)) // 이미 있으면 이름 업데이트
 //        .map(entity -> memberRepository.save(entity.updateSocialInfo(registerId, providerId)))
