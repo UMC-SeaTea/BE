@@ -49,12 +49,28 @@ public class Member extends BaseEntity {
   // 소셜 로그인 식별 정보
   private String registrationId; // "kakao" 저장
   private String providerId;     // 카카오의 고유 식별 번호 저장
+  private boolean isNewUser = false; // 회원가입 시 신규 유저인지 확인(기본 false)
+
+  // 회원가입 시점에 true로 변경
+  public void markAsNewUser() {
+    this.isNewUser = true;
+  }
+
+  // 회원가입 후 false로 변경
+  public void offNewUser() {
+    this.isNewUser = false;
+  }
 
   // 소셜 로그인 전용 빌더/생성자 혹은 업데이트 메서드
   public Member updateSocialInfo(String registrationId, String providerId) {
     this.registrationId = registrationId;
     this.providerId = providerId;
     return this;
+  }
+
+  // 닉네임 업데이트
+  public void updateNickname(String newNickname) {
+    this.nickname = newNickname;
   }
 
 

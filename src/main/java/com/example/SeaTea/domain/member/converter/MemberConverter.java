@@ -4,6 +4,7 @@ import com.example.SeaTea.domain.member.dto.request.MemberReqDTO;
 import com.example.SeaTea.domain.member.dto.response.MemberResDTO;
 import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.global.auth.enums.Role;
+import java.time.LocalDateTime;
 
 public class MemberConverter {
 
@@ -14,6 +15,16 @@ public class MemberConverter {
     return MemberResDTO.JoinDTO.builder()
         .id(member.getId())
         .createdAt(member.getCreatedAt())
+        .build();
+  }
+
+  public static MemberResDTO.LoginDTO toLoginDTO(Member member) {
+    return MemberResDTO.LoginDTO.builder()
+        .id(member.getId())
+        .email(member.getEmail())
+        .nickname(member.getNickname())
+        .role(member.getRole().toString()) // Enum을 String으로 변환
+        .profile_image(member.getProfile_image())
         .build();
   }
 
@@ -29,6 +40,15 @@ public class MemberConverter {
         .role(role)
         .nickname(dto.nickname())
 //        .profile_image(dto.profile_image())
+        .build();
+  }
+
+  // 닉네임 변경
+  public static MemberResDTO.UpdateNicknameResultDTO toUpdateNicknameResultDTO(Member member) {
+    return MemberResDTO.UpdateNicknameResultDTO.builder()
+        .id(member.getId())
+        .nickname(member.getNickname())
+        .updatedAt(LocalDateTime.now())
         .build();
   }
 
