@@ -55,15 +55,21 @@ public class KakaoOAuth2UserService extends DefaultOAuth2UserService {
   private Member saveOrUpdate(String email, String nickname, String registerId, String providerId) {
     return memberRepository.findByEmail(email)
         .map(entity -> entity.updateSocialInfo(registerId, providerId)) // 이미 있으면 이름 업데이트
-        .orElseGet(() -> memberRepository.save( // 없으면 새로 생성(회원가입)
-            Member.builder()
-                .nickname(nickname)
-                .email(email)
-                .role(Role.ROLE_MEMBER)
-                .registrationId(registerId)
-                .providerId(providerId)
-                .build()
-        ));
+        .orElseGet(() -> {
+          // 신규 가입
+              Member newMember = Member.builder()
+                  .nickname(nickname)
+                  .email(email)
+                  .role(Role.ROLE_MEMBER)
+                  .registrationId(registerId)
+                  .providerId(providerId)
+                  .build();
+
+              // 신규 회원임을 표시 (엔티티에 만드신 메서드 호출)
+              newMember.markAsNewUser();
+
+              return memberRepository.save(newMember);
+            });
   }
 
 }
