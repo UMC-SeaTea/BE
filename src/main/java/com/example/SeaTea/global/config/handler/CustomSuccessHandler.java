@@ -3,6 +3,7 @@ package com.example.SeaTea.global.config.handler;
 import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
+import com.example.SeaTea.global.auth.repository.RefreshTokenRepository;
 import com.example.SeaTea.global.auth.service.CustomUserDetails;
 import com.example.SeaTea.global.auth.entity.JwtTokenProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
@@ -27,12 +29,13 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
   private final JwtTokenProvider jwtTokenProvider;
   private final MemberRepository memberRepository;
   private final ObjectMapper objectMapper;
-//  private final RefreshTokenRepository refreshTokenRepository;
+  private final RefreshTokenRepository refreshTokenRepository;
 
   @Value("${app.frontend-callback-url}")
   private String frontendCallbackUrl;
 
   @Override
+  @Transactional
   public void onAuthenticationSuccess(
       HttpServletRequest request,
       HttpServletResponse response,
@@ -58,21 +61,22 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
     // Refresh 토큰 생성
     String refreshToken = jwtTokenProvider.createRefreshToken(authentication);
 
-    // Refresh Token을 DB나 Redis에 저장 (선택 사항이지만 보안상 필수)
-    // refreshTokenRepository.save(new RefreshToken(member.getId(), refreshToken));
+    // Refresh Token DB 저장 및 업데이트
+    // 기존 토큰이 있다면 업데이트 없으면 새로 생성(findByUserId 활용)
+    com.example.SeaTea.global.auth.entity.RefreshToken refreshTokenEntity = refreshTokenRepository.findByUserId(member.getId())
+        .map(token -> {
+          token.updateToken(refreshToken); // 기존 토큰 값 갱신
+          return token;
+        })
+        .orElseGet(() -> com.example.SeaTea.global.auth.entity.RefreshToken.builder()
+            .userId(member.getId())
+            .token(refreshToken)
+            .build());
 
-    /*
-    // 리다이렉트 시 쿠키에 Refresh Token 심기
-    Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
-    refreshCookie.setHttpOnly(true);  // 자바스크립트가 접근 못하게 막음 (XSS 방지)
-    refreshCookie.setSecure(true);    // HTTPS에서만 전송 (로컬 개발시에는 false로 테스트 가능)
-    refreshCookie.setPath("/");       // 모든 경로에서 쿠키 전송
-    refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7일 (초 단위)
-    // 응답에 쿠키 추가
-    response.addCookie(refreshCookie);
-    */
+    refreshTokenRepository.save(refreshTokenEntity);
 
-    boolean isProduction = true; // 환경 변수나 프로필로 관리할 때, false
+    // 쿠키 설정
+    boolean isProduction = false; // 환경 변수나 프로필로 관리할 때, false
 
     org.springframework.http.ResponseCookie refreshCookie = org.springframework.http.ResponseCookie
         .from("refreshToken", refreshToken)
