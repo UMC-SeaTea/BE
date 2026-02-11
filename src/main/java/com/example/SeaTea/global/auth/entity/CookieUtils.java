@@ -2,15 +2,21 @@ package com.example.SeaTea.global.auth.entity;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.jackson2.CoreJackson2Module;
+import org.springframework.security.oauth2.client.jackson2.OAuth2ClientJackson2Module;
+import org.springframework.security.web.jackson2.WebJackson2Module;
 import org.springframework.util.SerializationUtils;
 import java.util.Base64;
 import java.util.Optional;
 
 public class CookieUtils {
-  private static final ObjectMapper objectMapper = new ObjectMapper();
+  private static final ObjectMapper objectMapper = new ObjectMapper()
+      .registerModule(new JavaTimeModule()) // 👈 반드시 추가
+      .registerModules(new CoreJackson2Module(), new WebJackson2Module(), new OAuth2ClientJackson2Module());
 
   public static Optional<Cookie> getCookie(HttpServletRequest request, String name) {
     Cookie[] cookies = request.getCookies();
