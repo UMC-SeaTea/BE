@@ -28,13 +28,13 @@ public class CookieUtils {
     return Optional.empty();
   }
 
-  public static void addCookie(HttpServletResponse response, String name, String value, int maxAge) {
+  public static void addCookie(HttpServletResponse response, String name, String value, int maxAge, boolean isProduction) {
     org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from(name, value)
         .path("/")
         .httpOnly(true)
-        .secure(true)    // HTTPS 환경 필수
+        .secure(isProduction)    // HTTPS 환경 필수
         .maxAge(maxAge)
-        .sameSite("Lax") // CSRF 방지 및 일반적인 사용성 보장
+        .sameSite(isProduction ? "None" : "Lax") // CSRF 방지 및 일반적인 사용성 보장
         .build();
 
     response.addHeader(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString());
@@ -70,7 +70,7 @@ public class CookieUtils {
       byte[] decodedBytes = Base64.getUrlDecoder().decode(cookie.getValue());
       return objectMapper.readValue(decodedBytes, cls);
     } catch (Exception e) {
-      // 💡 변조된 쿠키가 들어올 경우 예외를 처리하여 보안 공격을 무력화합니다.
+      // 변조된 쿠키 또는 역직렬화 실패 시 null 반환
       return null;
     }
   }
