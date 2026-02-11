@@ -1,5 +1,7 @@
 package com.example.SeaTea.global.auth.entity;
 
+import com.example.SeaTea.domain.member.exception.MemberException;
+import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import io.jsonwebtoken.JwtException;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +25,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     try {
       String token = resolveToken(request);
       if (StringUtils.hasText(token)) {
-        jwtTokenProvider.validateToken(token); // 여기서 예외가 발생하면 ExceptionFilter로 이동
+        if (!jwtTokenProvider.validateToken(token)) {
+          throw new MemberException(MemberErrorCode._JWT_WRONG);
+        }
         Authentication auth = jwtTokenProvider.getAuthentication(token);
         SecurityContextHolder.getContext().setAuthentication(auth);
       }

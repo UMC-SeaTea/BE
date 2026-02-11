@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
@@ -30,7 +31,14 @@ public class ImageServiceImpl implements ImageService {
       }
       // 확장자 추출 및 안전한 파일명 생성
       String originalName = file.getOriginalFilename();
+      if (originalName == null || !originalName.contains(".")) {
+        throw new RuntimeException("유효하지 않은 파일명입니다.");
+      }
       String extension = originalName.substring(originalName.lastIndexOf("."));
+      // 허용 확장자 검증
+      if (!List.of(".jpg", ".jpeg", ".png", ".gif", ".webp").contains(extension.toLowerCase())) {
+        throw new RuntimeException("허용되지 않은 파일 형식입니다.");
+      }
       String fileName = UUID.randomUUID().toString() + extension;
 
       // 파일 저장
@@ -46,9 +54,16 @@ public class ImageServiceImpl implements ImageService {
 
   @Override
   public void delete(String imageUrl) {
+    if (imageUrl == null || imageUrl.isBlank()) return;
+
     // URL에서 파일명만 추출 (/api/images/uploads/uuid.png -> uuid.png)
     String fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
-    Path filePath = Paths.get(uploadDir).resolve(fileName).toAbsolutePath().normalize();
+    Path rootPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+    Path filePath = rootPath.resolve(fileName).toAbsolutePath().normalize();
+        // uploadDir 외부 접근 방지
+     if (!filePath.startsWith(rootPath)) {
+       throw new RuntimeException("잘못된 파일 경로입니다.");
+     }
 
     try {
       Files.deleteIfExists(filePath);

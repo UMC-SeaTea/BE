@@ -1,6 +1,8 @@
 package com.example.SeaTea.global.auth.entity;
 
 import com.example.SeaTea.domain.member.entity.Member;
+import com.example.SeaTea.domain.member.exception.MemberException;
+import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import com.example.SeaTea.global.auth.enums.Role;
 import com.example.SeaTea.global.auth.service.CustomUserDetails;
 import io.jsonwebtoken.Claims;
@@ -89,7 +91,7 @@ public class JwtTokenProvider {
     Claims claims = parseClaims(accessToken);
 
     if (claims.get("role") == null) {
-      throw new RuntimeException("권한 정보가 없는 토큰입니다.");
+      throw new MemberException(MemberErrorCode._NOT_RIGHT);
     }
 
     // 클레임에서 권한 정보 가져오기
@@ -113,7 +115,10 @@ public class JwtTokenProvider {
   // 토큰 유효성 검증(토큰이 위변조되지 않았는지, 만료되지 않았는지 확인)
   public boolean validateToken(String token) {
     try {
-      Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+      Jwts.parserBuilder()
+          .setSigningKey(key)
+          .build()
+          .parseClaimsJws(token);
       return true;
     } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
       // 서명이 잘못됐거나 토큰 구조가 깨짐
