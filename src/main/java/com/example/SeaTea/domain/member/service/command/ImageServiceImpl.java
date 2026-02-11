@@ -1,5 +1,7 @@
 package com.example.SeaTea.domain.member.service.command;
 
+import com.example.SeaTea.domain.member.exception.MemberException;
+import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,13 +33,20 @@ public class ImageServiceImpl implements ImageService {
       }
       // 확장자 추출 및 안전한 파일명 생성
       String originalName = file.getOriginalFilename();
+
+      List<String> allowedExtensions = List.of(".jpg", ".jpeg", ".png", ".gif", ".webp");
+      List<String> allowedContentTypes = List.of("image/jpeg", "image/png", "image/gif", "image/webp");
+
       if (originalName == null || !originalName.contains(".")) {
-        throw new RuntimeException("유효하지 않은 파일명입니다.");
+        throw new MemberException(MemberErrorCode._INVALID_FILENAME);
       }
       String extension = originalName.substring(originalName.lastIndexOf("."));
-      // 허용 확장자 검증
-      if (!List.of(".jpg", ".jpeg", ".png", ".gif", ".webp").contains(extension.toLowerCase())) {
-        throw new RuntimeException("허용되지 않은 파일 형식입니다.");
+      if (!allowedExtensions.contains(extension.toLowerCase())) {
+        throw new MemberException(MemberErrorCode._UNALLOWED_FILENAME);
+      }
+      String contentType = file.getContentType();
+      if (contentType == null || !allowedContentTypes.contains(contentType.toLowerCase())) {
+        throw new MemberException(MemberErrorCode._UNALLOWED_FILENAME);
       }
       String fileName = UUID.randomUUID().toString() + extension;
 
