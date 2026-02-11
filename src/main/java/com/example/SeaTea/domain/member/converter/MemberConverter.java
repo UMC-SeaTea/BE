@@ -1,5 +1,6 @@
 package com.example.SeaTea.domain.member.converter;
 
+import com.example.SeaTea.domain.diagnosis.entity.TastingNoteType;
 import com.example.SeaTea.domain.member.dto.request.MemberReqDTO;
 import com.example.SeaTea.domain.member.dto.response.MemberResDTO;
 import com.example.SeaTea.domain.member.entity.Member;
@@ -75,6 +76,33 @@ public class MemberConverter {
   ) {
     return MemberResDTO.Exceptions.builder()
         .message(exceptions)
+        .build();
+  }
+
+  public static MemberResDTO.MemberInfoDTO toMemberInfoDTO(Member member, Long savedCount, TastingNoteType type) {
+    return MemberResDTO.MemberInfoDTO.builder()
+        .userId(member.getId())
+        .email(member.getEmail())
+        .nickname(member.getNickname())
+        .profileImageUrl(member.getProfile_image())
+        .role(member.getRole())
+        .savedSpaceCount(savedCount)
+        .currentType(toTastingTypeDTO(type)) // ✅ 유형 변환 호출
+        .createdAt(member.getCreatedAt())
+        .updatedAt(member.getUpdatedAt())
+        .build();
+  }
+
+  private static MemberResDTO.TastingTypeDTO toTastingTypeDTO(TastingNoteType type) {
+    if (type == null) return null; // ✅ 진단 전이면 null 반환
+
+    return MemberResDTO.TastingTypeDTO.builder()
+        .id(type.getId())
+        .code(type.getCode())
+        .displayName(type.getDisplayName())
+        .subtitle(type.getSubtitle())
+        .description(type.getDescription())
+        .imageUrl(type.getImageUrl())
         .build();
   }
 }

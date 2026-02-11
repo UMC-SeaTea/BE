@@ -34,4 +34,6 @@ public interface MemberSavedPlaceRepository extends JpaRepository<MemberSavedPla
         """)
     long countByMemberIdAndTastingTypeId(@Param("memberId") Long memberId,
                                          @Param("tastingTypeId") Long tastingTypeId);
+
+    long countByMember_Id(Long memberId);
 }
