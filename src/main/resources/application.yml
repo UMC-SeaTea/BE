@@ -56,4 +56,4 @@ app:
   frontend-callback-url: ${FRONTEND_CALLBACK_URL}
 
 file:
-  upload-dir: C:${IMAGE_UPLOAD}
+  upload-dir: ${user.home}${IMAGE_UPLOAD}
