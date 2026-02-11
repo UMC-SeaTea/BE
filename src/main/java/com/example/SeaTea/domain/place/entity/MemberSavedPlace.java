@@ -41,4 +41,13 @@ public class MemberSavedPlace {
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    private MemberSavedPlace(Place place, Member member) {
+        this.place = place;
+        this.member = member;
+    }
+
+    public static MemberSavedPlace of(Member member, Place place) {
+        return new MemberSavedPlace(place, member);
+    }
 }

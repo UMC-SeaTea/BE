@@ -2,7 +2,9 @@ package com.example.SeaTea.domain.place.controller;
 
 import com.example.SeaTea.domain.diagnosis.enums.TastingNoteTypeCode;
 
+import com.example.SeaTea.domain.place.dto.PlaceSaveResponse;
 import com.example.SeaTea.domain.place.dto.SpaceListResponse;
+import com.example.SeaTea.domain.place.service.PlaceCommandService;
 import com.example.SeaTea.domain.place.service.PlaceQueryService;
 import com.example.SeaTea.domain.place.dto.SpaceBoundsResponse;
 import com.example.SeaTea.domain.place.dto.SpaceDetailResponse;
@@ -13,8 +15,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,6 +31,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 public class PlaceController {
 
     private final PlaceQueryService placeQueryService;
+    private final PlaceCommandService placeCommandService;
 
     @GetMapping
     @Operation(summary = "공간 목록 조회", description = "검색어/위치/커서 기반으로 공간 목록을 조회합니다.")
@@ -83,6 +88,20 @@ public class PlaceController {
         );
     }
 
+    @GetMapping("/teabag")
+    @Operation(summary = "마이 티백 목록 조회", description = "내가 저장한 장소 목록을 커서 기반으로 조회합니다. (인증 필요)")
+    public ApiResponse<SpaceListResponse> getMyTeabag(
+        @Parameter(description = "페이지 크기 (기본 20, 최대 100)")
+        @RequestParam(required = false) Integer size,
+        @Parameter(description = "커서 토큰 (응답의 nextCursor 그대로 전달)")
+        @RequestParam(required = false) String cursor,
+        @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ApiResponse.onSuccess(
+            placeQueryService.getMyTeabagSpaces(userDetails.getMember(), size, cursor)
+        );
+    }
+
     @GetMapping("/{spaceId}")
     @Operation(summary = "공간 상세 조회", description = "공간 상세 정보를 조회합니다.")
     public ApiResponse<SpaceDetailResponse> getSpaceDetail(
@@ -114,6 +133,28 @@ public class PlaceController {
     ) {
         return ApiResponse.onSuccess(
             placeQueryService.getSpacesByBounds(southWestLat, southWestLng, northEastLat, northEastLng)
+        );
+    }
+
+    @PostMapping("/{spaceId}/teabag")
+    @Operation(summary = "마이 티백에 저장", description = "장소를 마이 티백에 저장합니다. (인증 필요)")
+    public ApiResponse<PlaceSaveResponse> saveToMyTeabag(
+        @Parameter(description = "공간 ID") @PathVariable Long spaceId,
+        @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ApiResponse.onSuccess(
+            placeCommandService.savePlace(userDetails.getMember(), spaceId)
+        );
+    }
+
+    @DeleteMapping("/{spaceId}/teabag")
+    @Operation(summary = "마이 티백에서 저장 취소", description = "마이 티백에 저장한 장소를 취소합니다. (인증 필요)")
+    public ApiResponse<PlaceSaveResponse> unsaveFromMyTeabag(
+        @Parameter(description = "공간 ID") @PathVariable Long spaceId,
+        @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ApiResponse.onSuccess(
+            placeCommandService.unsavePlace(userDetails.getMember(), spaceId)
         );
     }
 }
