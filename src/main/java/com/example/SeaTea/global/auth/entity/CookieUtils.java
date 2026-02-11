@@ -1,13 +1,23 @@
 package com.example.SeaTea.global.auth.entity;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.jackson2.CoreJackson2Module;
+import org.springframework.security.oauth2.client.jackson2.OAuth2ClientJackson2Module;
+import org.springframework.security.web.jackson2.WebJackson2Module;
 import org.springframework.util.SerializationUtils;
 import java.util.Base64;
 import java.util.Optional;
 
 public class CookieUtils {
+  private static final ObjectMapper objectMapper = new ObjectMapper()
+      .registerModule(new JavaTimeModule()) // 👈 반드시 추가
+      .registerModules(new CoreJackson2Module(), new WebJackson2Module(), new OAuth2ClientJackson2Module());
+
   public static Optional<Cookie> getCookie(HttpServletRequest request, String name) {
     Cookie[] cookies = request.getCookies();
     if (cookies != null) {
@@ -18,12 +28,16 @@ public class CookieUtils {
     return Optional.empty();
   }
 
-  public static void addCookie(HttpServletResponse response, String name, String value, int maxAge) {
-    Cookie cookie = new Cookie(name, value);
-    cookie.setPath("/");
-    cookie.setHttpOnly(true);
-    cookie.setMaxAge(maxAge);
-    response.addCookie(cookie);
+  public static void addCookie(HttpServletResponse response, String name, String value, int maxAge, boolean isProduction) {
+    org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from(name, value)
+        .path("/")
+        .httpOnly(true)
+        .secure(isProduction)    // HTTPS 환경 필수
+        .maxAge(maxAge)
+        .sameSite(isProduction ? "None" : "Lax") // CSRF 방지 및 일반적인 사용성 보장
+        .build();
+
+    response.addHeader(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString());
   }
 
   public static void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
@@ -40,13 +54,24 @@ public class CookieUtils {
     }
   }
 
-  // 객체를 쿠키에 담기 위해 직렬화
+  // 객체를 JSON 문자열로 변환 후 Base64 인코딩
   public static String serialize(Object object) {
-    return Base64.getUrlEncoder().encodeToString(SerializationUtils.serialize(object));
+    try {
+      return Base64.getUrlEncoder()
+          .encodeToString(objectMapper.writeValueAsBytes(object));
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException("쿠키 직렬화 실패: " + e.getMessage());
+    }
   }
 
-  // 쿠키에서 객체를 역직렬화
+  // Base64 디코딩 후 JSON 문자열을 객체로 역직렬화
   public static <T> T deserialize(Cookie cookie, Class<T> cls) {
-    return cls.cast(SerializationUtils.deserialize(Base64.getUrlDecoder().decode(cookie.getValue())));
+    try {
+      byte[] decodedBytes = Base64.getUrlDecoder().decode(cookie.getValue());
+      return objectMapper.readValue(decodedBytes, cls);
+    } catch (Exception e) {
+      // 변조된 쿠키 또는 역직렬화 실패 시 null 반환
+      return null;
+    }
   }
 }

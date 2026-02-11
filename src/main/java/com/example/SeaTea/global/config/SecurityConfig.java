@@ -145,9 +145,4 @@ public class SecurityConfig {
     return new BCryptPasswordEncoder();
   }
 
-  @Bean
-  public HttpCookieOAuth2AuthorizationRequestRepository cookieOAuth2AuthorizationRequestRepository() {
-    return new HttpCookieOAuth2AuthorizationRequestRepository();
-  }
-
 }

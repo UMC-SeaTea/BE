@@ -54,6 +54,8 @@ jwt:
 
 app:
   frontend-callback-url: ${FRONTEND_CALLBACK_URL}
+  cookie:
+    secure: ${COOKIE_SECURE:false}
 
 file:
   upload-dir: ${IMAGE_UPLOAD}
