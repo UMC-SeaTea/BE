@@ -25,4 +25,10 @@ public class MemberReqDTO {
       String newNickname
   ){}
 
+  // 프로필 사진 업데이트
+  public record UpdateProfileImageDTO(
+      @NotBlank
+      String profileImageUrl
+  ) {}
+
 }

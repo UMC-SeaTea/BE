@@ -52,6 +52,15 @@ public class MemberConverter {
         .build();
   }
 
+  // 프사 변경
+  public static MemberResDTO.UpdateProfileImageResultDTO toUpdateProfileImageResultDTO(Member member) {
+    return MemberResDTO.UpdateProfileImageResultDTO.builder()
+        .id(member.getId())
+        .profileImageUrl(member.getProfile_image())
+        .updatedAt(LocalDateTime.now())
+        .build();
+  }
+
   // 테스트
   public static MemberResDTO.Tasting toTestingDTO(
       String testing

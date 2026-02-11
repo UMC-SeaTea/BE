@@ -2,6 +2,8 @@ package com.example.SeaTea.global.config;
 
 import com.example.SeaTea.global.auth.entity.JsonLoginFilter;
 import com.example.SeaTea.global.auth.Kakao.KakaoOAuth2UserService;
+import com.example.SeaTea.global.auth.entity.JwtAuthenticationFilter;
+import com.example.SeaTea.global.auth.entity.JwtTokenProvider;
 import com.example.SeaTea.global.config.handler.CustomFailureHandler;
 import com.example.SeaTea.global.config.handler.CustomLogoutSuccessHandler;
 import com.example.SeaTea.global.config.handler.CustomSuccessHandler;
@@ -14,9 +16,11 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 @EnableWebSecurity
@@ -30,6 +34,7 @@ public class SecurityConfig {
   private final KakaoOAuth2UserService kakaoOAuth2UserService;
   private final CorsConfigurationSource corsConfigurationSource;
   private final AuthenticationConfiguration authenticationConfiguration;
+  private final JwtTokenProvider jwtTokenProvider;
 
   private final String[] allowUris = {
       "/api/login",
@@ -78,6 +83,10 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
+        // 세션 끄기
+        .sessionManagement(session -> session
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        )
         .authorizeHttpRequests(requests -> requests
             .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/spaces/**").permitAll()
             .requestMatchers(allowUris).permitAll()
@@ -92,7 +101,7 @@ public class SecurityConfig {
 //                .successHandler(customSuccessHandler)
 //                .failureHandler(customFailureHandler)
 //                .permitAll()
-////                .defaultSuccessUrl("/swagger-ui/index.html", true)
+// //                .defaultSuccessUrl("/swagger-ui/index.html", true)
 //        )
 
         // 소셜 로그인 설정
@@ -131,13 +140,22 @@ public class SecurityConfig {
           // 페이지 이동(302) 대신 401 에러 코드 전송
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
           })
-        );
+        )
+
+        .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+
+        // 커스텀 JSON 필터를 UsernamePasswordAuthenticationFilter 위치에 추가
+        .addFilterAt(jsonLoginFilter(), org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
+
+        // CORS 설정
+        .cors(cors -> cors.configurationSource(corsConfigurationSource));
+
 
     // 커스텀 JSON 필터를 UsernamePasswordAuthenticationFilter 위치에 추가
-    http.addFilterAt(jsonLoginFilter(), org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+//    http.addFilterAt(jsonLoginFilter(), org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 
     // CORS 설정
-    http.cors(cors -> cors.configurationSource(corsConfigurationSource));
+//    http.cors(cors -> cors.configurationSource(corsConfigurationSource));
 
     return http.build();
   }

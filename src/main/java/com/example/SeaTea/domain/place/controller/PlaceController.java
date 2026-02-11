@@ -9,7 +9,7 @@ import com.example.SeaTea.domain.place.service.PlaceQueryService;
 import com.example.SeaTea.domain.place.dto.SpaceBoundsResponse;
 import com.example.SeaTea.domain.place.dto.SpaceDetailResponse;
 import com.example.SeaTea.domain.member.entity.Member;
-import com.example.SeaTea.global.auth.CustomUserDetails;
+import com.example.SeaTea.global.auth.service.CustomUserDetails;
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

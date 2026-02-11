@@ -15,8 +15,8 @@ public class WebConfig implements WebMvcConfigurer {
   public void addResourceHandlers(ResourceHandlerRegistry registry) {
     // 브라우저에서 접근할 URL 패턴 정의
     registry.addResourceHandler("/api/images/uploads/**")
-        // 실제 파일이 있는 물리적 경로 매핑 (반드시 file: 접두어와 마지막 /가 필요함)
-        .addResourceLocations("file:/path/to/your/upload/dir/");
+        // 실제 파일이 있는 물리적 경로 매핑(마지막에 / 추가)
+        .addResourceLocations("file:" + uploadDir + "/");
   }
 
 }

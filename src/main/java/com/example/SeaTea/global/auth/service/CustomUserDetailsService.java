@@ -1,8 +1,6 @@
-package com.example.SeaTea.global.auth;
+package com.example.SeaTea.global.auth.service;
 
 import com.example.SeaTea.domain.member.entity.Member;
-import com.example.SeaTea.domain.member.exception.MemberException;
-import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

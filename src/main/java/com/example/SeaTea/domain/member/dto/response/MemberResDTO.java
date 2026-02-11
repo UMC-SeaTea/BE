@@ -1,8 +1,10 @@
 package com.example.SeaTea.domain.member.dto.response;
 
+import com.example.SeaTea.domain.member.entity.Member;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 public class MemberResDTO {
 
@@ -25,7 +27,8 @@ public class MemberResDTO {
       String profile_image
   ){}
 
-  public record LoginRequestDTO(
+  @Builder
+  public static record LoginRequestDTO(
       String email,
       String password
   ){}
@@ -35,6 +38,14 @@ public class MemberResDTO {
   public record UpdateNicknameResultDTO(
       Long id,
       String nickname,
+      LocalDateTime updatedAt
+  ){}
+
+  // 이미지 업데이트 결과
+  @Builder
+  public record UpdateProfileImageResultDTO(
+      Long id,
+      String profileImageUrl,
       LocalDateTime updatedAt
   ){}
 

@@ -22,6 +22,11 @@ spring:
         jdbc:
           time_zone: Asia/Seoul
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   security:
     oauth2:
       client:
@@ -51,4 +56,4 @@ app:
   frontend-callback-url: ${FRONTEND_CALLBACK_URL}
 
 file:
-  upload-dir: ${user.home}${IMAGE_UPLOAD}
+  upload-dir: C:${IMAGE_UPLOAD}
