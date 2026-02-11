@@ -10,6 +10,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,15 +61,29 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
     // Refresh Token을 DB나 Redis에 저장 (선택 사항이지만 보안상 필수)
     // refreshTokenRepository.save(new RefreshToken(member.getId(), refreshToken));
 
+    /*
     // 리다이렉트 시 쿠키에 Refresh Token 심기
     Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
     refreshCookie.setHttpOnly(true);  // 자바스크립트가 접근 못하게 막음 (XSS 방지)
     refreshCookie.setSecure(true);    // HTTPS에서만 전송 (로컬 개발시에는 false로 테스트 가능)
     refreshCookie.setPath("/");       // 모든 경로에서 쿠키 전송
     refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7일 (초 단위)
-
     // 응답에 쿠키 추가
     response.addCookie(refreshCookie);
+    */
+
+    boolean isProduction = true; // 환경 변수나 프로필로 관리할 때, false
+
+    org.springframework.http.ResponseCookie refreshCookie = org.springframework.http.ResponseCookie
+        .from("refreshToken", refreshToken)
+        .httpOnly(true)
+        .secure(isProduction) // 운영 환경(HTTPS)에서만 true
+        .path("/")
+        .maxAge(14 * 24 * 60 * 60) // 14일 초 단위
+        .sameSite(isProduction ? "None" : "Lax") // 크로스 도메인 설정 시 None 필요
+        .build();
+
+    response.addHeader(org.springframework.http.HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
     // 신규 회원인 것 확인 후 false로 전환
     if (isNewUser) {
@@ -84,7 +99,9 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
           .queryParam("isNewUser", isNewUser)
           .queryParam("nickname", member.getNickname())
           .queryParam("profileImage", member.getProfile_image())
-          .build().toUriString();
+          .build()
+          .encode(StandardCharsets.UTF_8)
+          .toUriString();
       response.sendRedirect(targetUrl);
     } else {
       // 일반 JSON 로그인은 JSON 바디로 응답 (기존 주석 처리했던 로직 활용)

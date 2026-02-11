@@ -86,14 +86,21 @@ public class MemberCommandServiceImpl implements MemberCommandService {
     return MemberConverter.toUpdateNicknameResultDTO(realMember);
   }
 
+  // 이미지 수정
   @Override
   @Transactional
   public MemberResDTO.UpdateProfileImageResultDTO updateProfileImage(Member member, MemberReqDTO.UpdateProfileImageDTO dto) {
     Member realMember = memberRepository.findById(member.getId())
         .orElseThrow(() -> new MemberException(MemberErrorCode._NOT_FOUND));
 
+    // 기존 파일 삭제
+    String oldImageUrl = realMember.getProfile_image();
+    if (oldImageUrl != null && !oldImageUrl.isEmpty()) {
+      imageService.delete(oldImageUrl);
+    }
+
     // 조회된 영속 상태의 객체 값을 변경
-    realMember.updateNickname(dto.profileImageUrl());
+    realMember.updateProfileImage(dto.profileImageUrl());
 
     // 가독성이나 즉각적인 반영(save를 호출하지 않아도 @Transactional에 의해 변경 감지(Dirty Checking))
 //    memberRepository.save(member);
@@ -106,22 +113,6 @@ public class MemberCommandServiceImpl implements MemberCommandService {
   @Transactional(readOnly = true)
   public boolean isNicknameDuplicated(String nickname) {
     return memberRepository.existsByNickname(nickname);
-  }
-
-  public MemberResDTO.UpdateProfileImageResultDTO updateProfileImage(Member member, String newImageUrl) {
-    // 영속 상태의 엔티티 조회
-    Member realMember = memberRepository.findById(member.getId())
-        .orElseThrow(() -> new MemberException(MemberErrorCode._NOT_FOUND));
-
-    // 기존 이미지 파일 삭제 및 업데이트(로컬 디스크 용량 관리)
-    if (realMember.getProfile_image() != null) {
-      imageService.delete(realMember.getProfile_image());
-    }
-    realMember.updateProfileImage(newImageUrl);
-
-    // Dirty Checking으로 인해 자동 저장
-    return MemberConverter.toUpdateProfileImageResultDTO(realMember);
-
   }
 
 }
