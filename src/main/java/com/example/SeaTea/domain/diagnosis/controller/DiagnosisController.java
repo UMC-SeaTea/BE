@@ -12,7 +12,7 @@ import com.example.SeaTea.domain.diagnosis.service.DiagnosisResultService;
 import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
-import com.example.SeaTea.global.auth.CustomUserDetails;
+import com.example.SeaTea.global.auth.service.CustomUserDetails;
 import com.example.SeaTea.global.exception.GeneralException;
 import com.example.SeaTea.global.status.ErrorStatus;
 import jakarta.validation.Valid;

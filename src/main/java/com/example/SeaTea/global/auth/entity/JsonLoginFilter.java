@@ -35,18 +35,27 @@ public class JsonLoginFilter extends AbstractAuthenticationProcessingFilter {
       throw new AuthenticationServiceException("지원되지 않는 인증 방식입니다.");
     }
 
-    // 바디(InputStream)를 LoginRequest 객체로 매핑
-    LoginRequestDTO loginRequest = objectMapper.readValue(request.getInputStream(), LoginRequestDTO.class);
+    try{
+      // 바디(InputStream)를 LoginRequest 객체로 매핑
+       LoginRequestDTO loginRequest = objectMapper.readValue(request.getInputStream(), LoginRequestDTO.class);
 
-    if (loginRequest.email() == null || loginRequest.password() == null) {
-      throw new AuthenticationServiceException("이메일과 비밀번호는 필수입니다.");
+      if (loginRequest == null) {
+        throw new AuthenticationServiceException("로그인 요청 데이터가 올바르지 않습니다.");
+      }
+
+      if (loginRequest.email() == null || loginRequest.password() == null) {
+        throw new AuthenticationServiceException("이메일과 비밀번호는 필수입니다.");
+      }
+
+      // 인증을 위한 토큰 생성 (Principal: 이메일, Credentials: 비밀번호)
+      UsernamePasswordAuthenticationToken authToken =
+          new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password());
+
+      // AuthenticationManager에게 인증 위임
+      return this.getAuthenticationManager().authenticate(authToken);
+    } catch (Exception e) {
+      // Jackson 매핑 실패 시 발생하는 에러를 캐치
+      throw new AuthenticationServiceException("로그인 데이터 파싱 실패: " + e.getMessage());
     }
-
-    // 인증을 위한 토큰 생성 (Principal: 이메일, Credentials: 비밀번호)
-    UsernamePasswordAuthenticationToken authToken =
-        new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password());
-
-    // AuthenticationManager에게 인증 위임
-    return this.getAuthenticationManager().authenticate(authToken);
   }
 }

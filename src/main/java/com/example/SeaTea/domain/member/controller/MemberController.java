@@ -4,14 +4,13 @@ import com.example.SeaTea.domain.member.converter.MemberConverter;
 import com.example.SeaTea.domain.member.dto.request.MemberReqDTO;
 import com.example.SeaTea.domain.member.dto.response.MemberResDTO;
 import com.example.SeaTea.domain.member.entity.Member;
-import com.example.SeaTea.domain.member.exception.MemberException;
 import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import com.example.SeaTea.domain.member.exception.code.MemberSuccessCode;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
 import com.example.SeaTea.domain.member.service.command.ImageService;
 import com.example.SeaTea.domain.member.service.command.MemberCommandService;
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
-import com.example.SeaTea.global.auth.CustomUserDetails;
+import com.example.SeaTea.global.auth.service.CustomUserDetails;
 import com.example.SeaTea.global.status.SuccessStatus;
 import jakarta.validation.Valid;
 import java.util.Map;
@@ -36,6 +35,7 @@ public class MemberController {
 
   private final MemberCommandService memberCommandService;
   private final MemberRepository memberRepository;
+  private final ImageService imageService;
 
   // 회원가입 정보 입력 페이지
   @GetMapping("/sign-up")
@@ -130,20 +130,6 @@ public class MemberController {
 
     Member member = userDetails.getMember();
 
-    // Principal 타입에 따른 Member 추출
-//    if (principal instanceof CustomUserDetails userDetails) {
-//      // 일반 로그인
-//      member = userDetails.getMember();
-//    } else if (principal instanceof OAuth2User oAuth2User) {
-//      // 소셜 로그인 OAuth2User에서 email 추출 후 DB 조회
-//       String email = extractEmailFromOAuth2User(oAuth2User);
-//       member = memberRepository.findByEmail(email)
-//           .orElseThrow(() -> new MemberException(MemberErrorCode._NOT_LOGIN));
-//    }
-//    if(member == null){
-//      return ApiResponse.onFailure(MemberErrorCode._NOT_LOGIN.getCode(), MemberErrorCode._NOT_LOGIN.getMessage(), null);
-//    }
-
     // 닉네임 중복 체크 (ApiResponse로 에러 반환)
     if (memberCommandService.isNicknameDuplicated(dto.newNickname())) {
       return ApiResponse.onFailure(MemberErrorCode._CONFLICT_NICKNAME.getCode(), MemberErrorCode._CONFLICT_NICKNAME.getMessage(), null);
@@ -152,8 +138,8 @@ public class MemberController {
     return ApiResponse.onSuccess(memberCommandService.updateNickname(member, dto));
   }
 
-  private final ImageService imageService;
 
+  // 이미지 업로드 api
   @PostMapping("/upload/profile/image")
   public ApiResponse<String> uploadProfileImage(@RequestParam("file") MultipartFile file) {
     if (file.isEmpty()) {
@@ -161,6 +147,22 @@ public class MemberController {
     }
     String imageUrl = imageService.upload(file);
     return ApiResponse.onSuccess(imageUrl);
+  }
+
+  // 이미지 변경 api (DB 업데이트용)
+  @PatchMapping("/users/me/change/profile/image")
+  public ApiResponse<MemberResDTO.UpdateProfileImageResultDTO> updateProfileImage(
+      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @RequestBody @Valid MemberReqDTO.UpdateProfileImageDTO dto // 💡 URL을 받을 DTO 필요
+  ) {
+    if (userDetails == null) {
+      return ApiResponse.onFailure(MemberErrorCode._NOT_LOGIN.getCode(), MemberErrorCode._NOT_LOGIN.getMessage(), null);
+    }
+
+    Member member = userDetails.getMember();
+
+    // 서비스에서 기존 파일 삭제 + DB URL 업데이트 수행
+    return ApiResponse.onSuccess(memberCommandService.updateProfileImage(member, dto));
   }
 
 

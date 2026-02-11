@@ -22,18 +22,20 @@ public class ImageServiceImpl implements ImageService {
 
   @Override
   public String upload(MultipartFile file) {
-    // 폴더 생성
-    Path rootPath = Paths.get(uploadDir).toAbsolutePath().normalize();
     try {
+      // 폴더 생성
+      Path rootPath = Paths.get(uploadDir).toAbsolutePath().normalize();
       if (!Files.exists(rootPath)) {
         Files.createDirectories(rootPath);
       }
-      // 파일명 중복 방지(UUID 사용)
-      String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-      Path filePath = Paths.get(uploadDir).resolve(fileName);
+      // 확장자 추출 및 안전한 파일명 생성
+      String originalName = file.getOriginalFilename();
+      String extension = originalName.substring(originalName.lastIndexOf("."));
+      String fileName = UUID.randomUUID().toString() + extension;
 
-      // 파일 복사
-      Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+      // 파일 저장
+      Path targetLocation = rootPath.resolve(fileName);
+      Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
       // 접근 가능 URL 반환
       return "/api/images/uploads/" + fileName; // 접근 가능한 상대 경로 또는 전체 URL 반환
@@ -43,7 +45,15 @@ public class ImageServiceImpl implements ImageService {
   }
 
   @Override
-  @Transactional(readOnly = true)
   public void delete(String imageUrl) {
+    // URL에서 파일명만 추출 (/api/images/uploads/uuid.png -> uuid.png)
+    String fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+    Path filePath = Paths.get(uploadDir).resolve(fileName).toAbsolutePath().normalize();
+
+    try {
+      Files.deleteIfExists(filePath);
+    } catch (IOException e) {
+      System.err.println("파일 삭제 실패: " + e.getMessage());
+    }
   }
 }

@@ -8,6 +8,7 @@ import com.example.SeaTea.domain.member.exception.MemberException;
 import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
 import com.example.SeaTea.global.auth.enums.Role;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ public class MemberCommandServiceImpl implements MemberCommandService {
 
   private final MemberRepository memberRepository;
   private final PasswordEncoder passwordEncoder;
+  private final ImageService imageService;
 
   // 회원가입
   @Override
@@ -66,22 +68,60 @@ public class MemberCommandServiceImpl implements MemberCommandService {
   @Override
   @Transactional
   public MemberResDTO.UpdateNicknameResultDTO updateNickname(Member member, MemberReqDTO.UpdateNicknameDTO dto) {
+    Member realMember = memberRepository.findById(member.getId())
+        .orElseThrow(() -> new MemberException(MemberErrorCode._NOT_FOUND));
+
     // 닉네임 중복 체크
     checkNicknameDuplication(dto.newNickname());
 
     // 닉네임 변경 (Dirty Checking 활용)
     member.updateNickname(dto.newNickname());
 
-    // 가독성이나 즉각적인 반영(save를 호출하지 않아도 @Transactional에 의해 변경 감지(Dirty Checking))
-    memberRepository.save(member);
+    // 조회된 영속 상태의 객체 값을 변경
+    realMember.updateNickname(dto.newNickname());
 
-    return MemberConverter.toUpdateNicknameResultDTO(member);
+    // 가독성이나 즉각적인 반영(save를 호출하지 않아도 @Transactional에 의해 변경 감지(Dirty Checking))
+//    memberRepository.save(member);
+
+    return MemberConverter.toUpdateNicknameResultDTO(realMember);
   }
+
+  @Override
+  @Transactional
+  public MemberResDTO.UpdateProfileImageResultDTO updateProfileImage(Member member, MemberReqDTO.UpdateProfileImageDTO dto) {
+    Member realMember = memberRepository.findById(member.getId())
+        .orElseThrow(() -> new MemberException(MemberErrorCode._NOT_FOUND));
+
+    // 조회된 영속 상태의 객체 값을 변경
+    realMember.updateNickname(dto.profileImageUrl());
+
+    // 가독성이나 즉각적인 반영(save를 호출하지 않아도 @Transactional에 의해 변경 감지(Dirty Checking))
+//    memberRepository.save(member);
+
+    return MemberConverter.toUpdateProfileImageResultDTO(realMember);
+  }
+
 
   @Override
   @Transactional(readOnly = true)
   public boolean isNicknameDuplicated(String nickname) {
     return memberRepository.existsByNickname(nickname);
+  }
+
+  public MemberResDTO.UpdateProfileImageResultDTO updateProfileImage(Member member, String newImageUrl) {
+    // 영속 상태의 엔티티 조회
+    Member realMember = memberRepository.findById(member.getId())
+        .orElseThrow(() -> new MemberException(MemberErrorCode._NOT_FOUND));
+
+    // 기존 이미지 파일 삭제 및 업데이트(로컬 디스크 용량 관리)
+    if (realMember.getProfile_image() != null) {
+      imageService.delete(realMember.getProfile_image());
+    }
+    realMember.updateProfileImage(newImageUrl);
+
+    // Dirty Checking으로 인해 자동 저장
+    return MemberConverter.toUpdateProfileImageResultDTO(realMember);
+
   }
 
 }

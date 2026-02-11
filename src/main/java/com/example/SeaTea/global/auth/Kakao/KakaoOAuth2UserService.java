@@ -2,17 +2,13 @@ package com.example.SeaTea.global.auth.Kakao;
 
 import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
-import com.example.SeaTea.global.auth.CustomUserDetails;
+import com.example.SeaTea.global.auth.service.CustomUserDetails;
 import com.example.SeaTea.global.auth.enums.Role;
-import java.util.Collections;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +20,10 @@ public class KakaoOAuth2UserService extends DefaultOAuth2UserService {
   private final MemberRepository memberRepository;
 
   @Override
+  @Transactional
   public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+    System.out.println("Kakao login attempt start...");
+
     // 카카오에서 가져온 기본 유저 정보들
     OAuth2User oAuth2User = super.loadUser(userRequest);
     // 어느 소셜 서비스인지 확인 (현재 kakao만 연결)

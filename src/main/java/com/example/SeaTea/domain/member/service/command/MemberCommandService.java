@@ -12,6 +12,8 @@ public interface MemberCommandService {
 
   MemberResDTO.UpdateNicknameResultDTO updateNickname(Member member, MemberReqDTO.UpdateNicknameDTO dto);
 
+  MemberResDTO.UpdateProfileImageResultDTO updateProfileImage(Member member, MemberReqDTO.UpdateProfileImageDTO dto);
+
   void checkEmailDuplication(String email);
   void checkNicknameDuplication(String nickname);
 

@@ -15,9 +15,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
 @Getter
+@DynamicUpdate
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
@@ -72,6 +74,13 @@ public class Member extends BaseEntity {
   public void updateNickname(String newNickname) {
     this.nickname = newNickname;
   }
+
+  // 이미지 업데이트
+  public void updateProfileImage(String profileImageUrl) {
+    this.profile_image = profileImageUrl;
+  }
+
+
 
 
 //  status 탈퇴/차단 처리
