@@ -86,16 +86,8 @@ Spring Boot 기반의 **REST API 서버**로,
 
 ## 🏗 System Architecture
 
-SeaTea Backend는 **CI/CD 파이프라인 + 컨테이너 기반 인프라**로 구성되어 있습니다.
+<img width="2150" height="1354" alt="image" src="https://github.com/user-attachments/assets/e94f5e3c-88f0-4729-ae8d-a3a6fa778e33" />
 
-- GitHub Actions를 통해 코드 변경 사항을 자동 빌드
-- Docker Image를 생성하여 Docker Hub에 Push
-- AWS EC2 인스턴스에서 Docker 컨테이너로 Spring Boot 애플리케이션 실행
-- Amazon RDS(MySQL)와 연동하여 데이터 관리
-
-<p align="center">
-  <img width="1066" height="711" alt="image" src="https://github.com/user-attachments/assets/dd6df8c4-2937-4df9-a52c-dc565116133a" />
-</p>
 
 ---
 
