@@ -27,7 +27,7 @@ public class DiagnosisResultService {
     // 나의 최근 진단 결과 (완료된 세션 중 가장 최근 1건)
     public DiagnosisResultResponseDTO getMyLatestResult(Member member) {
         DiagnosisSession latest = diagnosisSessionRepository
-                .findTopByMemberAndTypeIsNotNullOrderByCreatedAtDesc(member)
+                .findTopByMemberAndDeletedAtIsNullAndTypeIsNotNullOrderByCreatedAtDesc(member)
                 .orElseThrow(() -> new DiagnosisException(DiagnosisErrorStatus._NO_COMPLETED_DIAGNOSIS));
                 //진단을 한번도 안했거나, 세션은 있는데 아직 결과가 나오지 않았을 경우
 
@@ -46,7 +46,7 @@ public class DiagnosisResultService {
             Pageable pageable
     ) {
         Slice<DiagnosisSession> slice =
-                diagnosisSessionRepository.findByMemberAndTypeIsNotNullOrderByCreatedAtDesc(
+                diagnosisSessionRepository.findByMemberAndDeletedAtIsNullAndTypeIsNotNullOrderByCreatedAtDesc(
                         member,
                         pageable
                 );
