@@ -9,6 +9,7 @@ import com.example.SeaTea.domain.place.service.PlaceQueryService;
 import com.example.SeaTea.domain.place.dto.SpaceBoundsResponse;
 import com.example.SeaTea.domain.place.dto.SpaceDetailResponse;
 import com.example.SeaTea.domain.member.entity.Member;
+import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import com.example.SeaTea.global.auth.service.CustomUserDetails;
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -97,6 +98,13 @@ public class PlaceController {
         @RequestParam(required = false) String cursor,
         @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
+        if (userDetails == null || userDetails.getMember() == null) {
+            return ApiResponse.onFailure(
+                MemberErrorCode._NOT_LOGIN.getCode(),
+                MemberErrorCode._NOT_LOGIN.getMessage(),
+                null
+            );
+        }
         return ApiResponse.onSuccess(
             placeQueryService.getRecentPlaces(userDetails.getMember(), size, cursor)
         );
@@ -113,6 +121,13 @@ public class PlaceController {
         @RequestParam(required = false) String cursor,
         @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
+        if (userDetails == null || userDetails.getMember() == null) {
+            return ApiResponse.onFailure(
+                MemberErrorCode._NOT_LOGIN.getCode(),
+                MemberErrorCode._NOT_LOGIN.getMessage(),
+                null
+            );
+        }
         return ApiResponse.onSuccess(
             placeQueryService.getMyTeabagSpaces(userDetails.getMember(), sort, size, cursor)
         );
@@ -132,7 +147,9 @@ public class PlaceController {
         Member member = userDetails == null ? null : userDetails.getMember();
         SpaceDetailResponse response = placeQueryService.getSpaceDetail(spaceId, lat, lng, member);
         if (member != null) {
-            placeCommandService.recordRecentView(member, spaceId);
+            try {
+                placeCommandService.recordRecentView(member, spaceId);
+            } catch (Exception e) { }
         }
         return ApiResponse.onSuccess(response);
     }
