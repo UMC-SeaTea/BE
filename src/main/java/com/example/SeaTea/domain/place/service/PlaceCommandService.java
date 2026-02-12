@@ -11,6 +11,7 @@ import com.example.SeaTea.domain.place.repository.PlaceRepository;
 import com.example.SeaTea.domain.place.status.SpaceErrorStatus;
 import com.example.SeaTea.global.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,13 +53,22 @@ public class PlaceCommandService {
         Place place = placeRepository.findById(placeId)
                 .orElseThrow(() -> new GeneralException(SpaceErrorStatus._NOT_FOUND));
 
-        memberRecentPlaceRepository.findByMember_IdAndPlace_PlaceId(member.getId(), placeId)
-                .ifPresentOrElse(
-                    existing -> {
+        try {
+            memberRecentPlaceRepository.findByMember_IdAndPlace_PlaceId(member.getId(), placeId)
+                    .ifPresentOrElse(
+                        existing -> {
+                            existing.touchViewedAt();
+                            memberRecentPlaceRepository.save(existing);
+                        },
+                        () -> memberRecentPlaceRepository.save(MemberRecentPlace.of(member, place))
+                    );
+        } catch (DataIntegrityViolationException e) {
+            // 동시 요청 시 unique constraint 위반 가능, 이미 INSERT된 경우 재조회 후 업데이트
+            memberRecentPlaceRepository.findByMember_IdAndPlace_PlaceId(member.getId(), placeId)
+                    .ifPresent(existing -> {
                         existing.touchViewedAt();
                         memberRecentPlaceRepository.save(existing);
-                    },
-                    () -> memberRecentPlaceRepository.save(MemberRecentPlace.of(member, place))
-                );
+                    });
+        }
     }
 }

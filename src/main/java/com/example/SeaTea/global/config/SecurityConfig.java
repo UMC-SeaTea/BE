@@ -93,6 +93,8 @@ public class SecurityConfig {
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         )
         .authorizeHttpRequests(requests -> requests
+            .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/spaces/recent").authenticated()
+            .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/spaces/teabag").authenticated()
             .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/spaces/**").permitAll()
             .requestMatchers(allowUris).permitAll()
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
