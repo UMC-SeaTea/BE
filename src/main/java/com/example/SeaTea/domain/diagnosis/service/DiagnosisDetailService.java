@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.LinkedHashMap;
 
@@ -36,6 +37,9 @@ public class DiagnosisDetailService {
     private final DiagnosisSessionRepository diagnosisSessionRepository;
     private final DiagnosisResponseRepository diagnosisResponseRepository;
     private final TastingNoteTypeRepository tastingNoteTypeRepository;
+
+    /** Step2 처리 시 DB에 저장된 Step1(Q1~Q4) 응답을 복원하기 위한 DTO */
+    private record Step1Answers(String q1, String q2, Integer q3, List<String> q4) {}
 
     /**
      * [상세 진단 제출]
@@ -134,7 +138,7 @@ public class DiagnosisDetailService {
         // 3) Step1/Step2 점수 계산
         // Step2 요청에는 q1~q4가 포함되지 않으므로, DB에 저장된 Step1(Q1~Q4) 응답을 복원해서 Step1 점수를 계산한다.
         List<DiagnosisResponse> savedStep1Responses = diagnosisResponseRepository.findAllBySessionId(session.getId());
-        DiagnosisDetailConverter.Step1Answers step1 = DiagnosisDetailConverter.restoreStep1Answers(savedStep1Responses);
+        Step1Answers step1 = restoreStep1Answers(savedStep1Responses);
 
         Map<TastingNoteTypeCode, Integer> step1Scores = DiagnosisStep1.scoreStep1(
                 step1.q1(),
@@ -172,6 +176,48 @@ public class DiagnosisDetailService {
                 finalCodeStr,
                 session.getId()
         );
+    }
+    /**
+     * Step2 요청에는 q1~q4가 포함되지 않으므로, 세션에 저장된 Step1(Q1~Q4) 응답을 DB에서 읽어 복원한다.
+     * Q4는 저장 시 "ALONE_ANYONE" 처럼 '_'로 merge 되었으므로 split("_")로 되돌린다.
+     */
+    private Step1Answers restoreStep1Answers(List<DiagnosisResponse> responses) {
+        String q1 = null;
+        String q2 = null;
+        Integer q3 = null;
+        List<String> q4 = null;
+
+        for (DiagnosisResponse r : responses) {
+            if (r.getItemCode() == null) continue;
+
+            switch (r.getItemCode()) {
+                case "Q1" -> q1 = r.getAnswerCode();
+                case "Q2" -> q2 = r.getAnswerCode();
+                case "Q3" -> {
+                    if (r.getAnswerCode() != null) {
+                        try {
+                            q3 = Integer.parseInt(r.getAnswerCode());
+                        } catch (NumberFormatException e) {
+                            throw new DiagnosisException(DiagnosisErrorStatus._INVALID_STEP);
+                        }
+                    }
+                }
+                case "Q4" -> {
+                    if (r.getAnswerCode() != null) {
+                        q4 = Arrays.asList(r.getAnswerCode().split("_"));
+                    }
+                }
+                default -> {
+                    // ignore
+                }
+            }
+        }
+
+        if (q1 == null || q2 == null || q3 == null || q4 == null || q4.isEmpty()) {
+            throw new DiagnosisException(DiagnosisErrorStatus._INVALID_STEP);
+        }
+
+        return new Step1Answers(q1, q2, q3, q4);
     }
     /**
      * Step1/Step2 점수 맵을 합산해서 반환한다.
