@@ -1,29 +1,30 @@
 package com.example.SeaTea.domain.diagnosis.scoring;
 
-import com.example.SeaTea.domain.diagnosis.dto.request.DiagnosisDetailRequestDTO;
 import com.example.SeaTea.domain.diagnosis.enums.Status;
 import com.example.SeaTea.domain.diagnosis.enums.TastingNoteTypeCode;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-/**누적 점수를 기반으로 분기 결정 */
+/** 누적 점수를 기반으로 분기 결정 */
 public class DiagnosisResultDecider {
 
-    //진단 점수 로직의 판단 결과를 담는 객체
+    // 진단 점수 로직의 판단 결과를 담는 객체
     public record DecideResult(Status status, Integer nextStep, TastingNoteTypeCode type) {}
 
-    /** Step1 판정: DONE 또는 NEED_MORE*/
+    /** Step1 판정: DONE 또는 NEED_MORE */
     public static DecideResult decideAfterStep1(Map<TastingNoteTypeCode, Integer> step1Scores) {
         // 1위 타입들
-        List<TastingNoteTypeCode> top = DiagnosisScoringUtil.findTopTypes(step1Scores);//1위 타입 찾기
+        List<TastingNoteTypeCode> top = DiagnosisScoringUtil.findTopTypes(step1Scores); // 1위 타입 찾기
         if (top.size() > 1) {
             return new DecideResult(Status.NEED_MORE, 2, null);
-        } //1위가 2개 이상이면 step2로 분기해야함
+        } // 1위가 2개 이상이면 step2로 분기해야함
 
-        //1위가 1개면 2위와의 점수 차가 2 이상이어야 함.
+        // 1위가 1개면 2위와의 점수 차가 2 이상이어야 함.
         // 2위 점수 구하기
         int topScore = DiagnosisScoringUtil.getScore(step1Scores, top.get(0));
-        int secondScore = Integer.MIN_VALUE; //1위 타입을 제외하고 나머지 타입 중 가장 높은 점수가 2위
+        int secondScore = Integer.MIN_VALUE; // 1위 타입을 제외하고 나머지 타입 중 가장 높은 점수가 2위
         for (var e : step1Scores.entrySet()) {
             if (e.getKey() == top.get(0)) continue;
             secondScore = Math.max(secondScore, e.getValue());
@@ -32,26 +33,25 @@ public class DiagnosisResultDecider {
         // 점수차 >= 2 이면 DONE
         if (topScore - secondScore >= 2) {
             return new DecideResult(Status.DONE, null, top.get(0));
-        }//점수차가 2 이상이면 끝!
+        } // 점수차가 2 이상이면 끝!
 
-        //나머지는 모두 step2 필요
+        // 나머지는 모두 step2 필요
         return new DecideResult(Status.NEED_MORE, 2, null);
     }
 
     /** Step2까지 반영해서 최종 타입 1개 확정 */
-    //step1, step2: 각 단계에서 나온 타입별 점수 , req : Q3의 값을 타이브레이커용으로 사용하기 위함
+    // step1, step2: 각 단계에서 나온 타입별 점수, q3Energy: 타이브레이커용 Q3 값
     public static TastingNoteTypeCode decideFinal(
-            DiagnosisDetailRequestDTO req,
+            Integer q3Energy,
             Map<TastingNoteTypeCode, Integer> step1Scores,
             Map<TastingNoteTypeCode, Integer> step2Scores
     ) {
-        var total = DiagnosisScoringUtil.merge(step1Scores, step2Scores);//각 분기별 점수 합산
+        var total = DiagnosisScoringUtil.merge(step1Scores, step2Scores); // 각 분기별 점수 합산
 
-        List<TastingNoteTypeCode> top = DiagnosisScoringUtil.findTopTypes(total);//1등 후보들 리스트
-        if (top.size() == 1) return top.get(0); //타입 한 개면 끝
+        List<TastingNoteTypeCode> top = DiagnosisScoringUtil.findTopTypes(total); // 1등 후보들 리스트
+        if (top.size() == 1) return top.get(0); // 타입 한 개면 끝
 
         // 1) 동점이면 Step2 점수 높은 타입 우선
-        //각 top 후보에 대해 step2Scores[t]를 갖여ㅘ서 비교하고, 가장 큰 타입만 filtered에 남김.
         int bestStep2 = Integer.MIN_VALUE;
         List<TastingNoteTypeCode> filtered = new ArrayList<>();
         for (TastingNoteTypeCode t : top) {
@@ -67,15 +67,15 @@ public class DiagnosisResultDecider {
         if (filtered.size() == 1) return filtered.get(0);
 
         // 2) 그래도 동점이면 Q3 우선순위로 1개 선택
-        return tieBreakByQ3(req.getQ3(), filtered);
+        return tieBreakByQ3(q3Energy, filtered);
     }
 
-    //Q3을 이용한 타이브레이커
-    //q3Energy: 사용자의 응답, candidates: 점수 공동 1등 타입들
+    // Q3을 이용한 타이브레이커
+    // q3Energy: 사용자의 응답, candidates: 점수 공동 1등 타입들
     private static TastingNoteTypeCode tieBreakByQ3(Integer q3Energy, List<TastingNoteTypeCode> candidates) {
         int energy = q3Energy;
 
-        List<TastingNoteTypeCode> priority; //우선순위를 가지는 타입 저장용
+        List<TastingNoteTypeCode> priority; // 우선순위를 가지는 타입 저장용
 
         if (energy <= 30) {
             // Q3 점수 반영: SMOKY(+2) > NUTTY(+1) = EARTHY(+1)
@@ -119,7 +119,7 @@ public class DiagnosisResultDecider {
             );
         }
 
-        //후보군 중에서 가장 먼저 매칭되는 타입을 선택
+        // 후보군 중에서 가장 먼저 매칭되는 타입을 선택
         for (TastingNoteTypeCode p : priority) {
             if (candidates.contains(p)) return p;
         }

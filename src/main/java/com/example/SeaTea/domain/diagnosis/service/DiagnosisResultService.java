@@ -19,6 +19,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+//결과 조회용
 public class DiagnosisResultService {
 
     private final DiagnosisSessionRepository diagnosisSessionRepository;

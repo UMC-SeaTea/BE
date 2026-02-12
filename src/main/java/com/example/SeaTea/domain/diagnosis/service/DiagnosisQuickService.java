@@ -26,6 +26,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @Transactional
+//간단 조회용
 public class DiagnosisQuickService {
 
     private final DiagnosisSessionRepository diagnosisSessionRepository;
