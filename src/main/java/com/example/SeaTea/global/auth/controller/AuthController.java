@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Auth", description = "인증 및 로그인 관리 API")
+@Tag(name = "member-controller", description = "인증 및 로그인 관리 API")
 @RestController
 @RequestMapping("/api")
 public class AuthController {
@@ -26,8 +26,7 @@ public class AuthController {
   })
   @PostMapping("/login")
   public void login(@RequestBody MemberResDTO.LoginRequestDTO loginRequest) {
-    // 이 메서드는 JsonLoginFilter가 요청을 가로채기 때문에 실제로 실행되지 않습니다.
-    // 하지만 Swagger는 이 메서드 정보를 바탕으로 문서를 생성합니다.
+    // Security 필터가 가로채기 때문에 이 메서드는 실행 X
   }
 
   // 로그아웃
