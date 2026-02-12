@@ -35,9 +35,11 @@ public class MemberQueryServiceImpl implements MemberQueryService {
 
     Long savedCount = memberSavedPlaceRepository.countByMember_Id(memberId);
 
-    TastingNoteType latestType = diagnosisSessionRepository.findTopByMemberAndTypeIsNotNullOrderByCreatedAtDesc(member)
-        .map(DiagnosisSession::getType)
+    DiagnosisSession latestSession = diagnosisSessionRepository
+        .findTopByMemberAndTypeIsNotNullOrderByCreatedAtDesc(member)
         .orElse(null);
+
+    TastingNoteType latestType = (latestSession != null) ? latestSession.getType() : null;
 
     return MemberConverter.toMemberInfoDTO(member, savedCount, latestType);
   }

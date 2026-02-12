@@ -85,6 +85,7 @@ public class MemberResDTO {
       String displayName,
       String subtitle,
       String description,
-      String imageUrl
+      String imageUrl,
+      LocalDateTime createdAt
   ) {}
 }
