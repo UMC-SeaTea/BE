@@ -205,7 +205,7 @@ public class MemberController {
   }
 
 
-  @DeleteMapping("/user/delete")
+  @DeleteMapping("/users/delete")
   public ApiResponse<String> withdraw(
       @AuthenticationPrincipal CustomUserDetails userDetails, // 현재 로그인 된 유저
       HttpServletResponse response

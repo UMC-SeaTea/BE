@@ -103,6 +103,7 @@ public class MemberConverter {
         .subtitle(type.getSubtitle())
         .description(type.getDescription())
         .imageUrl(type.getImageUrl())
+        .createdAt(type.getCreatedAt())
         .build();
   }
 }
