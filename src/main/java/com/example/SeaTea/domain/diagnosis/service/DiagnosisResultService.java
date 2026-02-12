@@ -26,14 +26,15 @@ public class DiagnosisResultService {
 
     // 나의 최근 진단 결과 (완료된 세션 중 가장 최근 1건)
     public DiagnosisResultResponseDTO getMyLatestResult(Member member) {
+        // 완료된 진단 세션이 없는 경우 → 조회 결과 없음
         DiagnosisSession latest = diagnosisSessionRepository
                 .findTopByMemberAndDeletedAtIsNullAndTypeIsNotNullOrderByCreatedAtDesc(member)
                 .orElseThrow(() -> new DiagnosisException(DiagnosisErrorStatus._NO_COMPLETED_DIAGNOSIS));
-                //진단을 한번도 안했거나, 세션은 있는데 아직 결과가 나오지 않았을 경우
 
+        // 세션에 연결된 타입이 null인 경우 → 데이터 세팅 문제(서버 오류)
         if (latest.getType() == null) {
             throw new DiagnosisException(DiagnosisErrorStatus._TYPE_NOT_FOUND);
-        }//타입 조회 실패 -> 결과는 잘 나왔는데 DB에 해당 타입이 없음 -> 서버문제
+        }
 
         TastingNoteType type = latest.getType(); // type != null 보장
         return DiagnosisResultResponseDTO.from(type);

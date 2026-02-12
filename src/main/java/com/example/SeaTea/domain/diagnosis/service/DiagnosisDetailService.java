@@ -54,8 +54,9 @@ public class DiagnosisDetailService {
      */
     public DiagnosisDetailResponseDTO submitDetailDiagnosis(Member member, DiagnosisDetailRequestDTO req) {
 
+        // step 값이 1 또는 2가 아닌 경우 → 클라이언트 요청 오류
         if (req.getStep() == null || (req.getStep() != 1 && req.getStep() != 2)) {
-            throw new DiagnosisException(DiagnosisErrorStatus._INVALID_STEP); //step이 null,1,2가 아니면 예외
+            throw new DiagnosisException(DiagnosisErrorStatus._INVALID_STEP);
         }
 
         // =========================
@@ -123,14 +124,16 @@ public class DiagnosisDetailService {
         // =========================
         // STEP 2
         // =========================
+        // Step2 요청인데 sessionId가 없는 경우 → 잘못된 요청
         if (req.getSessionId() == null) {
-            throw new DiagnosisException(DiagnosisErrorStatus._INVALID_STEP);//nul,1,2가 아니면 예외
+            throw new DiagnosisException(DiagnosisErrorStatus._SESSION_ID_REQUIRED);
         }
 
         // 1) 세션 조회 및 소유자 검증
         DiagnosisSession session = diagnosisSessionRepository
                 .findByIdAndMemberId(req.getSessionId(), member.getId())
-                .orElseThrow(() -> new DiagnosisException(DiagnosisErrorStatus._SESSION_NOT_FOUND));//세션 id 없음.
+                // 세션이 없거나, 해당 사용자의 세션이 아닌 경우
+                .orElseThrow(() -> new DiagnosisException(DiagnosisErrorStatus._SESSION_NOT_FOUND));
 
         // 2) Step2 응답 저장 (DTO → Entity 변환은 Converter 담당)
         List<DiagnosisResponse> step2Responses = DiagnosisDetailConverter.fromStep2(session, req);
@@ -199,7 +202,8 @@ public class DiagnosisDetailService {
                         try {
                             q3 = Integer.parseInt(r.getAnswerCode());
                         } catch (NumberFormatException e) {
-                            throw new DiagnosisException(DiagnosisErrorStatus._INVALID_STEP);
+                            // DB에 저장된 Q3 값이 정수가 아닌 경우 → 데이터 손상
+                            throw new DiagnosisException(DiagnosisErrorStatus._STEP1_DATA_CORRUPTED);
                         }
                     }
                 }
@@ -214,8 +218,9 @@ public class DiagnosisDetailService {
             }
         }
 
+        // Step1 필수 데이터(q1~q4) 중 하나라도 누락된 경우 → 데이터 무결성 오류
         if (q1 == null || q2 == null || q3 == null || q4 == null || q4.isEmpty()) {
-            throw new DiagnosisException(DiagnosisErrorStatus._INVALID_STEP);
+            throw new DiagnosisException(DiagnosisErrorStatus._STEP1_DATA_CORRUPTED);
         }
 
         return new Step1Answers(q1, q2, q3, q4);
