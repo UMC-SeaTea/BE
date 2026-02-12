@@ -32,6 +32,7 @@ import java.util.LinkedHashMap;
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
+//상세 조회용 서비스
 public class DiagnosisDetailService {
 
     private final DiagnosisSessionRepository diagnosisSessionRepository;
