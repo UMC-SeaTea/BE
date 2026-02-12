@@ -22,26 +22,23 @@ public class DiagnosisQuickConverter {
             DiagnosisSession session,
             List<QuickKeyword> keywords
     ) {
+        // 세션이 null인 경우 → 서비스 로직 오류 (잘못된 호출)
         if (session == null) {
-            throw new DiagnosisException(
-                DiagnosisErrorStatus._INVALID_STEP
-            );//세션이 비어있는데 컨버터 호출
+            throw new DiagnosisException(DiagnosisErrorStatus._INVALID_STEP);
         }
 
+        // 키워드가 없거나 비어있는 경우 → 클라이언트 요청 오류
         if (keywords == null || keywords.isEmpty()) {
-            throw new DiagnosisException(
-                DiagnosisErrorStatus._INVALID_STEP
-            );//키워드를 아예 안보냄
+            throw new DiagnosisException(DiagnosisErrorStatus._INVALID_KEYWORDS);
         }
 
         List<DiagnosisResponse> responses = new ArrayList<>();
 
         for (int i = 0; i < keywords.size(); i++) {
             QuickKeyword keyword = keywords.get(i);
+            // 키워드 리스트 내부에 null이 포함된 경우 → 잘못된 요청
             if (keyword == null) {
-                throw new DiagnosisException(
-                    DiagnosisErrorStatus._INVALID_STEP
-                );//키워드 중간에 null이 껴 있음.
+                throw new DiagnosisException(DiagnosisErrorStatus._INVALID_KEYWORDS);
             }
 
             responses.add(

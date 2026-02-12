@@ -45,9 +45,10 @@ public class DiagnosisQuickService {
         diagnosisSessionRepository.save(session);
 
         List<QuickKeyword> keywords = req.getKeywords();
-        if (keywords == null || keywords.size() != 3) {
-            throw new DiagnosisException(DiagnosisErrorStatus._INVALID_STEP);
-        } //키워드 중간에 null이 들어감
+        // 키워드는 정확히 3개여야 하며, 요소에 null이 포함되면 안 됨 → 클라이언트 요청 오류
+        if (keywords == null || keywords.size() != 3 || keywords.stream().anyMatch(k -> k == null)) {
+            throw new DiagnosisException(DiagnosisErrorStatus._INVALID_KEYWORDS);
+        }
 
         // 2) 응답 저장 (KW01~KW03)
         List<DiagnosisResponse> responses =
@@ -74,11 +75,10 @@ public class DiagnosisQuickService {
                         : QuickScoring.getMainType(keywords.get(0));
 
         // 5) 세션에 결과 타입 반영
+        // 결과 타입 코드가 DB(tasting_note_type)에 없으면 서버/데이터 세팅 문제
         TastingNoteType typeEntity =
                 tastingNoteTypeRepository.findByCode(resultCode.name())
-                        .orElseThrow(() ->
-                                new DiagnosisException(DiagnosisErrorStatus._TYPE_NOT_FOUND)
-                        );//타입 조회 실패 -> 결과는 잘 나왔는데 DB에 해당 타입이 없음 -> 서버문제
+                        .orElseThrow(() -> new DiagnosisException(DiagnosisErrorStatus._TYPE_NOT_FOUND));
 
         session.updateType(typeEntity);
 
