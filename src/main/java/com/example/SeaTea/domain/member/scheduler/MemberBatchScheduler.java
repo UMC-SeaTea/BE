@@ -27,7 +27,7 @@ public class MemberBatchScheduler {
 
     try {
       memberRepository.deleteByDeletedAtBefore(threshold);
-      log.info("30일 경과 탈퇴 회원 데이터 정리 완료 (기준일: {})", threshold);
+      log.info("14일 경과 탈퇴 회원 데이터 정리 완료 (기준일: {})", threshold);
     } catch (Exception e) {
       log.error("탈퇴 회원 데이터 정리 중 오류 발생: {}", e.getMessage());
     }

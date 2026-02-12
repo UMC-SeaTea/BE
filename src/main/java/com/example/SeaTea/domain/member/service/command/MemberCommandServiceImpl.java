@@ -9,6 +9,8 @@ import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
 import com.example.SeaTea.global.auth.enums.Role;
 import com.example.SeaTea.global.auth.repository.RefreshTokenRepository;
+import com.example.SeaTea.domain.diagnosis.repository.DiagnosisResponseRepository;
+import com.example.SeaTea.domain.diagnosis.repository.DiagnosisSessionRepository;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +25,8 @@ public class MemberCommandServiceImpl implements MemberCommandService {
   private final PasswordEncoder passwordEncoder;
   private final ImageService imageService;
   private final RefreshTokenRepository refreshTokenRepository;
+  private final DiagnosisResponseRepository diagnosisResponseRepository;
+  private final DiagnosisSessionRepository diagnosisSessionRepository;
 
   // 회원가입
   @Override
@@ -122,6 +126,12 @@ public class MemberCommandServiceImpl implements MemberCommandService {
     // 영속성 컨텍스트에 올리기 위해 조회
     Member realMember = memberRepository.findById(member.getId())
         .orElseThrow(() -> new MemberException(MemberErrorCode._NOT_FOUND));
+
+    // 진단 내역 Soft Delete (탈퇴 시 함께 삭제 처리)
+    LocalDateTime now = LocalDateTime.now();
+    // 자식(응답) → 부모(세션) 순서로 처리
+    diagnosisResponseRepository.softDeleteByMemberId(realMember.getId(), now);
+    diagnosisSessionRepository.softDeleteByMemberId(realMember.getId(), now);
 
     // 프로필 이미지 삭제 (Storage에서 실제 파일 제거)
     String profileImageUrl = realMember.getProfile_image();
