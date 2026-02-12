@@ -255,8 +255,10 @@ public class PlaceQueryService {
         }
 
         Pageable pageable = PageRequest.of(0, pageSize + 1);
-        List<MemberRecentPlace> rows = memberRecentPlaceRepository.findByMemberIdWithCursor(
-                member.getId(), lastViewedAt, lastId, pageable);
+        List<MemberRecentPlace> rows = (lastViewedAt == null && lastId == null)
+                ? memberRecentPlaceRepository.findByMemberIdFirstPage(member.getId(), pageable)
+                : memberRecentPlaceRepository.findByMemberIdWithCursor(
+                        member.getId(), lastViewedAt, lastId, pageable);
 
         boolean hasNext = rows.size() > pageSize;
         List<MemberRecentPlace> page = hasNext ? rows.subList(0, pageSize) : rows;
