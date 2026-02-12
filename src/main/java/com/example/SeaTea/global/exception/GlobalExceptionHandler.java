@@ -140,4 +140,38 @@ public class GlobalExceptionHandler {
             e.getMessage() // 디버깅용 메시지 (배포 시에는 null로 처리 권장)
         ));
   }
+
+  // 멀티파트 요청 관련 예외 (파일 업로드 형식 오류 등)
+  @ExceptionHandler(org.springframework.web.multipart.MultipartException.class)
+  public ResponseEntity<ApiResponse<Object>> handleMultipartException(
+      org.springframework.web.multipart.MultipartException e, HttpServletRequest request) {
+
+    log.warn("[MultipartException] Url: {}, Message: {}", request.getRequestURI(), e.getMessage());
+
+    ErrorReasonDTO reason = ErrorStatus._MULTIPART.getReasonHttpStatus();
+
+    return ResponseEntity
+        .status(reason.getHttpStatus())
+        .body(ApiResponse.onFailure(
+            reason.getCode(),
+            reason.getMessage(),
+            e.getMessage() // 구체적인 이유
+        ));
+  }
+
+  // 파일 용량 초과 예외
+  @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+  public ResponseEntity<ApiResponse<Object>> handleMaxUploadSizeExceededException(
+      org.springframework.web.multipart.MaxUploadSizeExceededException e, HttpServletRequest request) {
+
+    log.warn("[MaxUploadSizeExceeded] Url: {}, Message: {}", request.getRequestURI(), e.getMessage());
+
+    return ResponseEntity
+        .status(org.springframework.http.HttpStatus.PAYLOAD_TOO_LARGE)
+        .body(ApiResponse.onFailure(
+            ErrorStatus._OVER_SIZE.getCode(),
+            ErrorStatus._OVER_SIZE.getMessage(),
+            null
+        ));
+  }
 }
