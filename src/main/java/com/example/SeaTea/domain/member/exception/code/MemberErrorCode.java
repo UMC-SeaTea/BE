@@ -18,10 +18,10 @@ public enum MemberErrorCode implements BaseErrorCode {
   _DIFFERENT_PW(HttpStatus.BAD_REQUEST, "MEMBER404", "비밀번호와 비밀번호 확인이 다릅니다."),
   _NOT_LOGIN(HttpStatus.UNAUTHORIZED, "MEMBER405", "로그인되지 않은 상태입니다."),
   _FILE_EMPTY(HttpStatus.BAD_REQUEST, "MEMBER406", "파일이 비어있습니다."),
-  _JWT_WRONG(HttpStatus.UNAUTHORIZED, "MEMBER407", "JWT 토큰에 오류가 발생하였습니다.")
-
-  // 일반 로그인 및 카카오 로그인 이외 로그인 시도
-  // _INVALID_LOGIN_TYPE(HttpStatus.BAD_REQUEST, "MEMBER406", "지원하지 않는 로그인 형식입니다."),
+  _JWT_WRONG(HttpStatus.UNAUTHORIZED, "MEMBER407", "JWT 토큰에 오류가 발생하였습니다."),
+  _NOT_RIGHT(HttpStatus.FORBIDDEN, "MEMBER408", "토큰에 권한 정보가 없습니다."),
+  _INVALID_FILENAME(HttpStatus.BAD_REQUEST, "MEMBER409", "유효하지 않은 파일명입니다."),
+  _UNALLOWED_FILENAME(HttpStatus.BAD_REQUEST, "MEMBER410", "허용되지 않은 파일 형식입니다."),
   ;
 
   private final HttpStatus httpStatus;

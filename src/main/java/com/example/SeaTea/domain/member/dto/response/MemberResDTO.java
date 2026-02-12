@@ -1,6 +1,7 @@
 package com.example.SeaTea.domain.member.dto.response;
 
 import com.example.SeaTea.domain.member.entity.Member;
+import com.example.SeaTea.global.auth.enums.Role;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
@@ -65,4 +66,28 @@ public class MemberResDTO {
   @Builder
   @Getter
   public static class MemberNotFound {}
+
+  @Builder
+  public record MemberInfoDTO(
+      Long userId,
+      String email,
+      String nickname,
+      String profileImageUrl,
+      Role role,
+      Long savedSpaceCount,
+      TastingTypeDTO currentType,
+      LocalDateTime createdAt,
+      LocalDateTime updatedAt
+      // CurrentTypeDTO currentType // 나중에 Type 엔티티와 연관관계 설정 시 추가
+  ) {}
+
+  @Builder
+  public record TastingTypeDTO(
+      Long id,
+      String code,
+      String displayName,
+      String subtitle,
+      String description,
+      String imageUrl
+  ) {}
 }

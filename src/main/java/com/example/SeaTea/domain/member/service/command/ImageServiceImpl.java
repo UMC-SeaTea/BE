@@ -1,10 +1,13 @@
 package com.example.SeaTea.domain.member.service.command;
 
+import com.example.SeaTea.domain.member.exception.MemberException;
+import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
@@ -30,7 +33,21 @@ public class ImageServiceImpl implements ImageService {
       }
       // 확장자 추출 및 안전한 파일명 생성
       String originalName = file.getOriginalFilename();
+
+      List<String> allowedExtensions = List.of(".jpg", ".jpeg", ".png", ".gif", ".webp");
+      List<String> allowedContentTypes = List.of("image/jpeg", "image/png", "image/gif", "image/webp");
+
+      if (originalName == null || !originalName.contains(".")) {
+        throw new MemberException(MemberErrorCode._INVALID_FILENAME);
+      }
       String extension = originalName.substring(originalName.lastIndexOf("."));
+      if (!allowedExtensions.contains(extension.toLowerCase())) {
+        throw new MemberException(MemberErrorCode._UNALLOWED_FILENAME);
+      }
+      String contentType = file.getContentType();
+      if (contentType == null || !allowedContentTypes.contains(contentType.toLowerCase())) {
+        throw new MemberException(MemberErrorCode._UNALLOWED_FILENAME);
+      }
       String fileName = UUID.randomUUID().toString() + extension;
 
       // 파일 저장
@@ -46,9 +63,16 @@ public class ImageServiceImpl implements ImageService {
 
   @Override
   public void delete(String imageUrl) {
+    if (imageUrl == null || imageUrl.isBlank()) return;
+
     // URL에서 파일명만 추출 (/api/images/uploads/uuid.png -> uuid.png)
     String fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
-    Path filePath = Paths.get(uploadDir).resolve(fileName).toAbsolutePath().normalize();
+    Path rootPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+    Path filePath = rootPath.resolve(fileName).toAbsolutePath().normalize();
+        // uploadDir 외부 접근 방지
+     if (!filePath.startsWith(rootPath)) {
+       throw new RuntimeException("잘못된 파일 경로입니다.");
+     }
 
     try {
       Files.deleteIfExists(filePath);

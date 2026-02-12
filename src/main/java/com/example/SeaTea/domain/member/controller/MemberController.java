@@ -9,6 +9,7 @@ import com.example.SeaTea.domain.member.exception.code.MemberSuccessCode;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
 import com.example.SeaTea.domain.member.service.command.ImageService;
 import com.example.SeaTea.domain.member.service.command.MemberCommandService;
+import com.example.SeaTea.domain.member.service.query.MemberQueryService;
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
 import com.example.SeaTea.global.auth.service.CustomUserDetails;
 import com.example.SeaTea.global.status.SuccessStatus;
@@ -34,6 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class MemberController {
 
   private final MemberCommandService memberCommandService;
+  private final MemberQueryService memberQueryService;
   private final MemberRepository memberRepository;
   private final ImageService imageService;
 
@@ -204,5 +206,23 @@ public class MemberController {
     }
 
     return email.toString();
+  }
+
+  @GetMapping("/users/profile")
+  public ApiResponse<MemberResDTO.MemberInfoDTO> getMemberProfile(
+      @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    if (userDetails == null) {
+      return ApiResponse.onFailure(
+          MemberErrorCode._NOT_LOGIN.getCode(),
+          MemberErrorCode._NOT_LOGIN.getMessage(),
+          null
+      );
+    }
+
+    // 서비스 호출 시 ID를 넘겨 최신 정보를 DB에서 조회 (영속성 컨텍스트 보장)
+    MemberResDTO.MemberInfoDTO result = memberQueryService.getMemberInfo(userDetails.getMember().getId());
+
+    return ApiResponse.onSuccess(result);
   }
 }

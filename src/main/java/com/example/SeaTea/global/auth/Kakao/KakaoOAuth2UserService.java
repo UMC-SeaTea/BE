@@ -22,8 +22,6 @@ public class KakaoOAuth2UserService extends DefaultOAuth2UserService {
   @Override
   @Transactional
   public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-    System.out.println("Kakao login attempt start...");
-
     // 카카오에서 가져온 기본 유저 정보들
     OAuth2User oAuth2User = super.loadUser(userRequest);
     // 어느 소셜 서비스인지 확인 (현재 kakao만 연결)
