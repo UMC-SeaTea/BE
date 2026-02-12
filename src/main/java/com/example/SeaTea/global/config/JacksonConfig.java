@@ -20,12 +20,12 @@ public class JacksonConfig {
     mapper.registerModule(new JavaTimeModule());
     mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-    // 보안 취약점 방지를 위한 최소한의 모듈만 등록
-    mapper.registerModules(
-        new CoreJackson2Module(),
-        new WebJackson2Module(),
-        new OAuth2ClientJackson2Module()
-    );
+//    // 보안 취약점 방지를 위한 최소한의 모듈만 등록
+//    mapper.registerModules(
+//        new CoreJackson2Module(),
+//        new WebJackson2Module(),
+//        new OAuth2ClientJackson2Module()
+//    );
     return mapper;
   }
 }
