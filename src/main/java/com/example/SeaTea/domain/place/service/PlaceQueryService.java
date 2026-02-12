@@ -158,15 +158,20 @@ public class PlaceQueryService {
         return new SpaceListResponse(items, new CursorInfo(nextCursor, hasNext));
     }
 
-    public SpaceListResponse getMyTeabagSpaces(Member member, Integer size, String cursor) {
+    private static final String TEABAG_SORT_LATEST = "latest";
+    private static final String TEABAG_SORT_SAVED = "saved";
+
+    public SpaceListResponse getMyTeabagSpaces(Member member, String sort, Integer size, String cursor) {
         int pageSize = normalizeSize(size);
+        String normalizedSort = normalizeTeabagSort(sort);
 
         Long lastId = null;
         if (cursor != null) {
             try {
                 SpaceCursor cursorToken = SpaceCursor.decode(cursor);
                 lastId = cursorToken.getLastId();
-                if (cursorToken.getSort() != null && !ID_SORT.equalsIgnoreCase(cursorToken.getSort())) {
+                String cursorSort = cursorToken.getSort();
+                if (cursorSort == null || !cursorSort.equalsIgnoreCase(normalizedSort)) {
                     throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
                 }
             } catch (IllegalArgumentException e) {
@@ -175,8 +180,9 @@ public class PlaceQueryService {
         }
 
         Pageable pageable = PageRequest.of(0, pageSize + 1);
-        List<MemberSavedPlace> rows = memberSavedPlaceRepository.findByMemberIdWithCursor(
-                member.getId(), lastId, pageable);
+        List<MemberSavedPlace> rows = TEABAG_SORT_LATEST.equals(normalizedSort)
+                ? memberSavedPlaceRepository.findByMemberIdWithCursorDesc(member.getId(), lastId, pageable)
+                : memberSavedPlaceRepository.findByMemberIdWithCursorAsc(member.getId(), lastId, pageable);
 
         boolean hasNext = rows.size() > pageSize;
         List<MemberSavedPlace> page = hasNext ? rows.subList(0, pageSize) : rows;
@@ -202,10 +208,21 @@ public class PlaceQueryService {
         String nextCursor = null;
         if (hasNext) {
             MemberSavedPlace last = page.get(page.size() - 1);
-            nextCursor = SpaceCursor.encode(new SpaceCursor(last.getMemberSavedPlaceId(), ID_SORT, null));
+            nextCursor = SpaceCursor.encode(new SpaceCursor(last.getMemberSavedPlaceId(), normalizedSort, null));
         }
 
         return new SpaceListResponse(items, new CursorInfo(nextCursor, hasNext));
+    }
+
+    private String normalizeTeabagSort(String sort) {
+        if (sort == null || sort.isBlank()) {
+            return TEABAG_SORT_LATEST;
+        }
+        String normalized = sort.trim().toLowerCase();
+        if (TEABAG_SORT_LATEST.equals(normalized) || TEABAG_SORT_SAVED.equals(normalized)) {
+            return normalized;
+        }
+        throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
     }
 
     public SpaceDetailResponse getSpaceDetail(Long spaceId,

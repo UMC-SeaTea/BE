@@ -91,6 +91,8 @@ public class PlaceController {
     @GetMapping("/teabag")
     @Operation(summary = "마이 티백 목록 조회", description = "내가 저장한 장소 목록을 커서 기반으로 조회합니다. (인증 필요)")
     public ApiResponse<SpaceListResponse> getMyTeabag(
+        @Parameter(description = "정렬 (latest: 최신순, saved: 저장순, 기본값 latest)")
+        @RequestParam(required = false, defaultValue = "latest") String sort,
         @Parameter(description = "페이지 크기 (기본 20, 최대 100)")
         @RequestParam(required = false) Integer size,
         @Parameter(description = "커서 토큰 (응답의 nextCursor 그대로 전달)")
@@ -98,7 +100,7 @@ public class PlaceController {
         @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         return ApiResponse.onSuccess(
-            placeQueryService.getMyTeabagSpaces(userDetails.getMember(), size, cursor)
+            placeQueryService.getMyTeabagSpaces(userDetails.getMember(), sort, size, cursor)
         );
     }
 
