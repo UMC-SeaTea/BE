@@ -9,6 +9,7 @@ import com.example.SeaTea.domain.place.service.PlaceQueryService;
 import com.example.SeaTea.domain.place.dto.SpaceBoundsResponse;
 import com.example.SeaTea.domain.place.dto.SpaceDetailResponse;
 import com.example.SeaTea.domain.member.entity.Member;
+import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import com.example.SeaTea.global.auth.service.CustomUserDetails;
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -88,6 +89,27 @@ public class PlaceController {
         );
     }
 
+    @GetMapping("/recent")
+    @Operation(summary = "최근 확인한 공간 목록 조회", description = "최근 상세 조회한 공간 목록을 조회합니다. (인증 필요)")
+    public ApiResponse<SpaceListResponse> getRecentPlaces(
+        @Parameter(description = "페이지 크기 (기본 20, 최대 100)")
+        @RequestParam(required = false) Integer size,
+        @Parameter(description = "커서 토큰 (응답의 nextCursor 그대로 전달)")
+        @RequestParam(required = false) String cursor,
+        @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        if (userDetails == null || userDetails.getMember() == null) {
+            return ApiResponse.onFailure(
+                MemberErrorCode._NOT_LOGIN.getCode(),
+                MemberErrorCode._NOT_LOGIN.getMessage(),
+                null
+            );
+        }
+        return ApiResponse.onSuccess(
+            placeQueryService.getRecentPlaces(userDetails.getMember(), size, cursor)
+        );
+    }
+
     @GetMapping("/teabag")
     @Operation(summary = "마이 티백 목록 조회", description = "내가 저장한 장소 목록을 커서 기반으로 조회합니다. (인증 필요)")
     public ApiResponse<SpaceListResponse> getMyTeabag(
@@ -99,13 +121,20 @@ public class PlaceController {
         @RequestParam(required = false) String cursor,
         @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
+        if (userDetails == null || userDetails.getMember() == null) {
+            return ApiResponse.onFailure(
+                MemberErrorCode._NOT_LOGIN.getCode(),
+                MemberErrorCode._NOT_LOGIN.getMessage(),
+                null
+            );
+        }
         return ApiResponse.onSuccess(
             placeQueryService.getMyTeabagSpaces(userDetails.getMember(), sort, size, cursor)
         );
     }
 
     @GetMapping("/{spaceId}")
-    @Operation(summary = "공간 상세 조회", description = "공간 상세 정보를 조회합니다.")
+    @Operation(summary = "공간 상세 조회", description = "공간 상세 정보를 조회합니다. 로그인 시 최근 확인 목록에 추가됩니다.")
     public ApiResponse<SpaceDetailResponse> getSpaceDetail(
         @Parameter(description = "공간 ID")
         @PathVariable Long spaceId,
@@ -116,9 +145,13 @@ public class PlaceController {
         @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Member member = userDetails == null ? null : userDetails.getMember();
-        return ApiResponse.onSuccess(
-            placeQueryService.getSpaceDetail(spaceId, lat, lng, member)
-        );
+        SpaceDetailResponse response = placeQueryService.getSpaceDetail(spaceId, lat, lng, member);
+        if (member != null) {
+            try {
+                placeCommandService.recordRecentView(member, spaceId);
+            } catch (Exception e) { }
+        }
+        return ApiResponse.onSuccess(response);
     }
 
     @GetMapping("/bounds")

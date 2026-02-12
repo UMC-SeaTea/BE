@@ -15,6 +15,9 @@ import com.example.SeaTea.global.apiPayLoad.ApiResponse;
 import com.example.SeaTea.global.auth.service.CustomUserDetails;
 import com.example.SeaTea.global.exception.GeneralException;
 import com.example.SeaTea.global.status.ErrorStatus;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 
+@Tag(name = "Diagnosis", description = "진단(상세/간단) 및 결과 조회 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/diagnosis")
@@ -40,6 +44,7 @@ public class DiagnosisController {
     }
 
     //상세 진단
+    @Operation(summary = "상세 진단 제출", description = "Step1 또는 Step2 상세 진단을 제출합니다.")
     @PostMapping("/detail")
     public ApiResponse<DiagnosisDetailResponseDTO> submitDetailDiagnosis(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
@@ -53,6 +58,7 @@ public class DiagnosisController {
     }
 
     //간단 진단
+    @Operation(summary = "간단 진단 제출", description = "3개의 키워드를 기반으로 간단 진단을 수행합니다.")
     @PostMapping("/quick")
     public ApiResponse<DiagnosisQuickResponseDTO> submitQuickDiagnosis(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
@@ -67,6 +73,7 @@ public class DiagnosisController {
 
 
     //최신 진단결과 조회
+    @Operation(summary = "나의 최신 진단 결과 조회", description = "완료된 진단 중 가장 최근 결과를 조회합니다.")
     @GetMapping("/me")
     public ApiResponse<DiagnosisResultResponseDTO> getMyDiagnosisResult(
             @AuthenticationPrincipal CustomUserDetails customUserDetails
@@ -78,12 +85,15 @@ public class DiagnosisController {
         return ApiResponse.onSuccess(diagnosisResultService.getMyLatestResult(member));
     }
 
-    //과거 진단이력 조회 ( 슬라이스로 페이징 : 처음은 3개, 그 프론트에서 10개를 명시하면 됨.)
+    //과거 진단이력 조회 ( 슬라이스로 페이징 : 페이징은 10개씩 하되, 처음 노출은 3개만..)
+    @Operation(summary = "나의 진단 이력 조회", description = "완료된 진단 이력을 페이지 단위로 조회합니다.")
     @GetMapping("/me/history")
     public ApiResponse<Slice<DiagnosisHistoryResponseDTO>> getMyDiagnosisHistory(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @Parameter(description = "페이지 번호 (0부터 시작)")
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "3") int size
+            @Parameter(description = "페이지 크기")
+            @RequestParam(defaultValue = "10") int size
     ) {
         if (customUserDetails == null) { //로그인안되면 COMMON401
             throw new GeneralException(ErrorStatus._UNAUTHORIZED);
@@ -97,61 +107,4 @@ public class DiagnosisController {
         );
         return ApiResponse.onSuccess(diagnosisResultService.getMyHistory(member, pageable));
     }
-    /// ================== TEST ONLY ==================
-    /// ⚠️ 운영/배포 반영 금지: memberId로 타인 데이터 접근 가능
-    /// 필요 시 로컬에서만 잠깐 사용하고 바로 제거할 것
-    /// ===============================================
-//    // 임시 테스트용: memberId로 멤버 조회 후 진단 제출
-//    @PostMapping("/test/detail")
-//    public ApiResponse<DiagnosisDetailResponseDTO> submitDetailDiagnosisTest(
-//            @RequestParam Long memberId,
-//            @RequestBody @Valid DiagnosisDetailRequestDTO req
-//    ) {
-//        System.out.println(">>> diagnosis detail test called"); //호출 확인용
-//        Member member = findMemberOrThrow(memberId);
-//
-//        return ApiResponse.onSuccess(diagnosisDetailService.submitDetailDiagnosis(member, req));
-//        //성공이면 200 OK, DTO를 JSON으로 반환
-//    }
-//
-//    // 임시 테스트용: memberId로 멤버 조회 후 간단 진단 제출
-//    @PostMapping("/test/quick")
-//    public ApiResponse<DiagnosisQuickResponseDTO> submitQuickDiagnosisTest(
-//            @RequestParam Long memberId,
-//            @RequestBody @Valid DiagnosisQuickRequestDTO req
-//    ) {
-//        System.out.println(">>> diagnosis quick test called"); // 호출 확인용
-//
-//        Member member = findMemberOrThrow(memberId);
-//
-//        return ApiResponse.onSuccess(diagnosisQuickService.submitQuickDiagnosis(member, req));
-//    }
-//
-//    // 임시 테스트용: memberId로 멤버 조회 후 최신 이력
-//    @GetMapping("/test/me")
-//    public ApiResponse<DiagnosisResultResponseDTO> getMyDiagnosisResultTest(
-//            @RequestParam Long memberId
-//    ) {
-//        Member member = findMemberOrThrow(memberId);
-//        return ApiResponse.onSuccess(diagnosisResultService.getMyLatestResult(member));
-//    }
-//
-//    //임시 테스트용: memberId로 멤버 조회 후 과거 진단내역 조회 (슬라이스로 페이징)
-//    @GetMapping("/test/me/history")
-//    public ApiResponse<Slice<DiagnosisHistoryResponseDTO>> getMyDiagnosisHistoryTest(
-//            @RequestParam Long memberId,
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "3") int size
-//    ) {
-//        Member member = findMemberOrThrow(memberId);
-//
-//        Pageable pageable = PageRequest.of(
-//                page,
-//                size,
-//                Sort.by(Sort.Direction.DESC, "createdAt")
-//        );
-//
-//        return ApiResponse.onSuccess(diagnosisResultService.getMyHistory(member, pageable));
-//    }
-
 }

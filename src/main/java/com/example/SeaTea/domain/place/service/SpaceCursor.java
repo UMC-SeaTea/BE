@@ -1,4 +1,4 @@
-package com.example.SeaTea.domain.place.dto;
+package com.example.SeaTea.domain.place.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

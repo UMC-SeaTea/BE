@@ -1,6 +1,5 @@
 package com.example.SeaTea.domain.place.service;
 
-import com.example.SeaTea.domain.place.dto.SpaceCursor;
 import com.example.SeaTea.domain.place.dto.SpaceBoundsResponse;
 import com.example.SeaTea.domain.place.dto.SpaceBoundsResponse.SpaceBoundsItem;
 import com.example.SeaTea.domain.place.dto.SpaceDetailResponse;
@@ -8,8 +7,10 @@ import com.example.SeaTea.domain.place.dto.SpaceListResponse;
 import com.example.SeaTea.domain.place.dto.SpaceListResponse.CursorInfo;
 import com.example.SeaTea.domain.place.dto.SpaceListResponse.SpaceItem;
 import com.example.SeaTea.domain.place.dto.SpaceListResponse.SpaceItemWithDescription;
+import com.example.SeaTea.domain.place.entity.MemberRecentPlace;
 import com.example.SeaTea.domain.place.entity.MemberSavedPlace;
 import com.example.SeaTea.domain.place.entity.Place;
+import com.example.SeaTea.domain.place.repository.MemberRecentPlaceRepository;
 import com.example.SeaTea.domain.place.repository.MemberSavedPlaceRepository;
 import com.example.SeaTea.domain.place.repository.PlaceRepository;
 import com.example.SeaTea.domain.place.repository.PlaceRepository.PlaceDistanceView;
@@ -17,6 +18,9 @@ import com.example.SeaTea.domain.place.status.SpaceErrorStatus;
 import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.global.exception.GeneralException;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -34,9 +38,11 @@ public class PlaceQueryService {
     private static final int MAX_SIZE = 100;
     private static final String DISTANCE_SORT = "distance,asc";
     private static final String ID_SORT = "id,asc";
+    private static final String RECENT_SORT = "recent";
 
     private final PlaceRepository placeRepository;
     private final MemberSavedPlaceRepository memberSavedPlaceRepository;
+    private final MemberRecentPlaceRepository memberRecentPlaceRepository;
     private final Environment environment;
 
     public SpaceListResponse getSpaces(Double lat,
@@ -223,6 +229,66 @@ public class PlaceQueryService {
             return normalized;
         }
         throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+    }
+
+    public SpaceListResponse getRecentPlaces(Member member, Integer size, String cursor) {
+        int pageSize = normalizeSize(size);
+
+        LocalDateTime lastViewedAt = null;
+        Long lastId = null;
+        if (cursor != null) {
+            try {
+                SpaceCursor cursorToken = SpaceCursor.decode(cursor);
+                lastId = cursorToken.getLastId();
+                if (cursorToken.getSort() == null || !RECENT_SORT.equalsIgnoreCase(cursorToken.getSort())) {
+                    throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+                }
+                if (cursorToken.getLastDistance() != null) {
+                    lastViewedAt = LocalDateTime.ofInstant(
+                        Instant.ofEpochMilli(cursorToken.getLastDistance().longValue()),
+                        ZoneId.systemDefault()
+                    );
+                }
+            } catch (IllegalArgumentException e) {
+                throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+            }
+        }
+
+        Pageable pageable = PageRequest.of(0, pageSize + 1);
+        List<MemberRecentPlace> rows = (lastViewedAt == null && lastId == null)
+                ? memberRecentPlaceRepository.findByMemberIdFirstPage(member.getId(), pageable)
+                : memberRecentPlaceRepository.findByMemberIdWithCursor(
+                        member.getId(), lastViewedAt, lastId, pageable);
+
+        boolean hasNext = rows.size() > pageSize;
+        List<MemberRecentPlace> page = hasNext ? rows.subList(0, pageSize) : rows;
+
+        List<SpaceItem> items = new ArrayList<>();
+        for (MemberRecentPlace mrp : page) {
+            Place place = mrp.getPlace();
+            String tastingTypeCode = place.getTastingType() == null
+                    ? null
+                    : place.getTastingType().getCode();
+            items.add(new SpaceItem(
+                    place.getPlaceId(),
+                    place.getName(),
+                    tastingTypeCode,
+                    toDouble(place.getLat()),
+                    toDouble(place.getLng()),
+                    place.getThumbnailImageUrl(),
+                    place.getAddress(),
+                    null
+            ));
+        }
+
+        String nextCursor = null;
+        if (hasNext) {
+            MemberRecentPlace last = page.get(page.size() - 1);
+            double viewedAtEpoch = last.getViewedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            nextCursor = SpaceCursor.encode(new SpaceCursor(last.getMemberRecentPlaceId(), RECENT_SORT, viewedAtEpoch));
+        }
+
+        return new SpaceListResponse(items, new CursorInfo(nextCursor, hasNext));
     }
 
     public SpaceDetailResponse getSpaceDetail(Long spaceId,
