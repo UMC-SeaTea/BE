@@ -11,12 +11,15 @@ import com.example.SeaTea.domain.member.service.command.MemberCommandService;
 import com.example.SeaTea.domain.member.service.query.MemberQueryService;
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
 import com.example.SeaTea.global.auth.service.CustomUserDetails;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -199,5 +202,32 @@ public class MemberController {
     MemberResDTO.MemberInfoDTO result = memberQueryService.getMemberInfo(userDetails.getMember().getId());
 
     return ApiResponse.onSuccess(result);
+  }
+
+
+  @DeleteMapping("/user/delete")
+  public ApiResponse<String> withdraw(
+      @AuthenticationPrincipal CustomUserDetails userDetails, // 현재 로그인 된 유저
+      HttpServletResponse response
+  ) {
+    if (userDetails == null) {
+      return ApiResponse.onFailure(MemberErrorCode._NOT_LOGIN.getCode(), MemberErrorCode._NOT_LOGIN.getMessage(), null);
+    }
+
+    memberCommandService.withdraw(userDetails.getMember());
+
+    // 클라이언트의 쿠키 파기 (JWT 토큰 무효화 유도)
+    expireCookie(response, "accessToken");
+    expireCookie(response, "refreshToken");
+
+    return ApiResponse.onSuccess("회원 탈퇴가 완료되었습니다. 모든 인증 정보가 파기되었습니다.");
+  }
+
+  //  JWT가 쿠키에 저장되어 사용 시, 쿠키를 즉시 만료
+  private void expireCookie(HttpServletResponse response, String name) {
+    Cookie cookie = new Cookie(name, null);
+    cookie.setMaxAge(0);
+    cookie.setPath("/");
+    response.addCookie(cookie);
   }
 }

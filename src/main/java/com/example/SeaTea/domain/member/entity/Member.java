@@ -16,6 +16,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 @Entity
 @Getter
@@ -24,6 +26,8 @@ import org.hibernate.annotations.DynamicUpdate;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Table(name = "member")
+@SQLDelete(sql = "UPDATE member SET deleted_at = CURRENT_TIMESTAMP WHERE member_id = ?")
+@Where(clause = "deleted_at IS NULL")
 public class Member extends BaseEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -81,6 +85,11 @@ public class Member extends BaseEntity {
   }
 
 
+  // 이메일 중복처리 데이터 변환
+  public void prepareForWithdrawal() {
+    this.email = "withdrawn_" + System.currentTimeMillis() + "_" + this.email;
+    this.nickname = "탈퇴사용자_" + System.currentTimeMillis();
+  }
 
 
 //  status 탈퇴/차단 처리

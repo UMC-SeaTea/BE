@@ -57,7 +57,7 @@ public class ImageServiceImpl implements ImageService {
       // 접근 가능 URL 반환
       return "/api/images/uploads/" + fileName; // 접근 가능한 상대 경로 또는 전체 URL 반환
     } catch (IOException e) {
-      throw new RuntimeException("파일 저장에 실패했습니다.", e);
+      throw new MemberException(MemberErrorCode._INVALID_FILENAME);
     }
   }
 
@@ -69,9 +69,10 @@ public class ImageServiceImpl implements ImageService {
     String fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
     Path rootPath = Paths.get(uploadDir).toAbsolutePath().normalize();
     Path filePath = rootPath.resolve(fileName).toAbsolutePath().normalize();
+
         // uploadDir 외부 접근 방지
      if (!filePath.startsWith(rootPath)) {
-       throw new RuntimeException("잘못된 파일 경로입니다.");
+       throw new MemberException(MemberErrorCode._INVALID_FILENAME);
      }
 
     try {

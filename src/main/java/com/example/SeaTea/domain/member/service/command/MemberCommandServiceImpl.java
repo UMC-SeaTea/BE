@@ -8,6 +8,7 @@ import com.example.SeaTea.domain.member.exception.MemberException;
 import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
 import com.example.SeaTea.global.auth.enums.Role;
+import com.example.SeaTea.global.auth.repository.RefreshTokenRepository;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +22,7 @@ public class MemberCommandServiceImpl implements MemberCommandService {
   private final MemberRepository memberRepository;
   private final PasswordEncoder passwordEncoder;
   private final ImageService imageService;
+  private final RefreshTokenRepository refreshTokenRepository;
 
   // 회원가입
   @Override
@@ -108,11 +110,36 @@ public class MemberCommandServiceImpl implements MemberCommandService {
     return MemberConverter.toUpdateProfileImageResultDTO(realMember);
   }
 
-
   @Override
   @Transactional(readOnly = true)
   public boolean isNicknameDuplicated(String nickname) {
     return memberRepository.existsByNickname(nickname);
+  }
+
+  @Override
+  @Transactional
+  public void withdraw(Member member) {
+    // 영속성 컨텍스트에 올리기 위해 조회
+    Member realMember = memberRepository.findById(member.getId())
+        .orElseThrow(() -> new MemberException(MemberErrorCode._NOT_FOUND));
+
+    // 프로필 이미지 삭제 (Storage에서 실제 파일 제거)
+    String profileImageUrl = realMember.getProfile_image();
+    if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
+      imageService.delete(profileImageUrl);
+    }
+
+    // Refresh Token 삭제
+    refreshTokenRepository.deleteByUserId(realMember.getId());
+
+    // Unique 제약 조건 충돌 방지를 위한 정보 업데이트
+    realMember.prepareForWithdrawal();
+
+    // 기존 이메일&닉네임 변경
+    memberRepository.saveAndFlush(realMember);
+
+    // Soft Delete(@SQLDelete에 의해 DELETE가 아닌 UPDATE 쿼리)
+    memberRepository.delete(realMember);
   }
 
 }

@@ -18,4 +18,7 @@ public interface MemberCommandService {
   void checkNicknameDuplication(String nickname);
 
   boolean isNicknameDuplicated(String nickname);
+
+  // 탈퇴 메서드
+  void withdraw(Member member);
 }
