@@ -23,9 +23,21 @@ public interface MemberSavedPlaceRepository extends JpaRepository<MemberSavedPla
           and (:lastId is null or msp.memberSavedPlaceId > :lastId)
         order by msp.memberSavedPlaceId asc
         """)
-    List<MemberSavedPlace> findByMemberIdWithCursor(@Param("memberId") Long memberId,
-                                                    @Param("lastId") Long lastId,
-                                                    Pageable pageable);
+    List<MemberSavedPlace> findByMemberIdWithCursorAsc(@Param("memberId") Long memberId,
+                                                       @Param("lastId") Long lastId,
+                                                       Pageable pageable);
+
+    @Query("""
+        select msp from MemberSavedPlace msp
+        join fetch msp.place p
+        left join fetch p.tastingType
+        where msp.member.id = :memberId
+          and (:lastId is null or msp.memberSavedPlaceId < :lastId)
+        order by msp.memberSavedPlaceId desc
+        """)
+    List<MemberSavedPlace> findByMemberIdWithCursorDesc(@Param("memberId") Long memberId,
+                                                        @Param("lastId") Long lastId,
+                                                        Pageable pageable);
 
     @Query("""
         select count(ms) from MemberSavedPlace ms
