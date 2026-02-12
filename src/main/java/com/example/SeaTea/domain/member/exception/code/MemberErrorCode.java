@@ -22,6 +22,7 @@ public enum MemberErrorCode implements BaseErrorCode {
   _NOT_RIGHT(HttpStatus.FORBIDDEN, "MEMBER408", "토큰에 권한 정보가 없습니다."),
   _INVALID_FILENAME(HttpStatus.BAD_REQUEST, "MEMBER409", "유효하지 않은 파일명입니다."),
   _UNALLOWED_FILENAME(HttpStatus.BAD_REQUEST, "MEMBER410", "허용되지 않은 파일 형식입니다."),
+  _ACCESS_DENIED(HttpStatus.FORBIDDEN, "MEMBER411", "접근 권한이 없습니다."),
   ;
 
   private final HttpStatus httpStatus;

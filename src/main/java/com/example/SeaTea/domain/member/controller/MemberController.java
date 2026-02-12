@@ -6,13 +6,11 @@ import com.example.SeaTea.domain.member.dto.response.MemberResDTO;
 import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import com.example.SeaTea.domain.member.exception.code.MemberSuccessCode;
-import com.example.SeaTea.domain.member.repository.MemberRepository;
 import com.example.SeaTea.domain.member.service.command.ImageService;
 import com.example.SeaTea.domain.member.service.command.MemberCommandService;
 import com.example.SeaTea.domain.member.service.query.MemberQueryService;
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
 import com.example.SeaTea.global.auth.service.CustomUserDetails;
-import com.example.SeaTea.global.status.SuccessStatus;
 import jakarta.validation.Valid;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -36,14 +34,7 @@ public class MemberController {
 
   private final MemberCommandService memberCommandService;
   private final MemberQueryService memberQueryService;
-  private final MemberRepository memberRepository;
   private final ImageService imageService;
-
-  // 회원가입 정보 입력 페이지
-  @GetMapping("/sign-up")
-  public String signUpForm() {
-    return "/api/sign-up";
-  }
 
   @PostMapping("/sign-up")
   public ApiResponse<MemberResDTO.JoinDTO> signup(
@@ -52,8 +43,7 @@ public class MemberController {
     return ApiResponse.of(MemberSuccessCode._CREATED, memberCommandService.signup(dto));
   }
 
-
-  // ******** 중복체크
+  // 중복체크
   @GetMapping("/check/email")
   public ApiResponse<String> checkEmail(@RequestParam String email) {
     memberCommandService.checkEmailDuplication(email);
@@ -171,23 +161,8 @@ public class MemberController {
   // 관리자 테스트
   @GetMapping("/admin/test")
   public ApiResponse<MemberResDTO.Tasting> test() throws Exception {
-    // 응답 코드 정의
-    SuccessStatus code = SuccessStatus._OK;
-//    throw new MemberException(ErrorStatus._INTERNAL_SERVER_ERROR);
     return ApiResponse.onSuccess(MemberConverter.toTestingDTO("관리자 계정입니다!"));
   }
-
-  // 예외 상황
-//  @GetMapping("/exception")
-//  public ApiResponse<MemberResDTO.Exceptions> exception(
-//      @RequestParam Long flag
-//  ) {
-//    memberQueryService.checkFlag(flag);
-//
-//    // 응답 코드 정의
-//    SuccessStatus code = SuccessStatus._OK;
-//    return ApiResponse.onSuccess(MemberConverter.toExceptionsDTO("I'm testing"));
-//  }
 
   // 소셜 로그인한 계정 이메일 가져오기
   private String extractEmailFromOAuth2User(OAuth2User oAuth2User) {
