@@ -1,4 +1,4 @@
-package com.example.SeaTea;
+package com.example.SeaTea.global;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

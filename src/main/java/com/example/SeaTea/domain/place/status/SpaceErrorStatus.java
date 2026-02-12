@@ -9,8 +9,36 @@ import org.springframework.http.HttpStatus;
 @Getter
 @AllArgsConstructor
 public enum SpaceErrorStatus implements BaseErrorCode {
+    // size 파라미터 범위/값 오류
+    _INVALID_SIZE(
+            HttpStatus.BAD_REQUEST,
+            "PLACE400",
+            "size 파라미터가 올바르지 않습니다. (1~100 사이의 정수여야 합니다.)"
+    ),
+
+    // cursor 토큰 포맷/정렬 기준 불일치
+    _INVALID_CURSOR(
+            HttpStatus.BAD_REQUEST,
+            "PLACE400",
+            "cursor 토큰이 올바르지 않습니다."
+    ),
+
+    // sort 값이 허용된 값(latest, saved 등)이 아님
+    _INVALID_SORT(
+            HttpStatus.BAD_REQUEST,
+            "PLACE400",
+            "정렬 기준(sort) 값이 올바르지 않습니다."
+    ),
+
+    // tastingTypeCode 등 휴식유형 코드가 Enum 에 없음
+    _INVALID_TASTING_TYPE(
+            HttpStatus.BAD_REQUEST,
+            "PLACE400",
+            "휴식유형 코드(tastingTypeCode)가 올바르지 않습니다."
+    ),
+
     // 위치 정보(lat,lng) 누락/범위 초과/NaN
-    _INVALID_PARAMS(
+    _INVALID_LOCATION(
             HttpStatus.BAD_REQUEST,
             "PLACE400",
             "위치 정보(lat,lng)가 올바르지 않습니다."

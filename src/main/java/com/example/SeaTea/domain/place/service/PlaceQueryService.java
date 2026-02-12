@@ -59,7 +59,7 @@ public class PlaceQueryService {
             try {
                 cursorToken = SpaceCursor.decode(cursor);
             } catch (IllegalArgumentException e) {
-                throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+                throw new GeneralException(SpaceErrorStatus._INVALID_CURSOR);
             }
         }
 
@@ -69,14 +69,14 @@ public class PlaceQueryService {
             validateLocation(lat, lng);
             if (cursorToken != null && cursorToken.getSort() != null
                     && !DISTANCE_SORT.equalsIgnoreCase(cursorToken.getSort())) {
-                throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+                throw new GeneralException(SpaceErrorStatus._INVALID_CURSOR);
             }
             return fetchByDistance(lat, lng, keyword, pageSize, cursorToken);
         }
 
         if (cursorToken != null && cursorToken.getSort() != null
                 && !ID_SORT.equalsIgnoreCase(cursorToken.getSort())) {
-            throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+            throw new GeneralException(SpaceErrorStatus._INVALID_CURSOR);
         }
         return fetchById(keyword, pageSize, cursorToken);
     }
@@ -104,12 +104,12 @@ public class PlaceQueryService {
             try {
                 cursorToken = SpaceCursor.decode(cursor);
             } catch (IllegalArgumentException e) {
-                throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+                throw new GeneralException(SpaceErrorStatus._INVALID_CURSOR);
             }
         }
         if (cursorToken != null && cursorToken.getSort() != null
                 && !ID_SORT.equalsIgnoreCase(cursorToken.getSort())) {
-            throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+            throw new GeneralException(SpaceErrorStatus._INVALID_CURSOR);
         }
         Long lastId = cursorToken == null ? null : cursorToken.getLastId();
 
@@ -178,10 +178,10 @@ public class PlaceQueryService {
                 lastId = cursorToken.getLastId();
                 String cursorSort = cursorToken.getSort();
                 if (cursorSort == null || !cursorSort.equalsIgnoreCase(normalizedSort)) {
-                    throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+                    throw new GeneralException(SpaceErrorStatus._INVALID_CURSOR);
                 }
             } catch (IllegalArgumentException e) {
-                throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+                throw new GeneralException(SpaceErrorStatus._INVALID_CURSOR);
             }
         }
 
@@ -228,7 +228,7 @@ public class PlaceQueryService {
         if (TEABAG_SORT_LATEST.equals(normalized) || TEABAG_SORT_SAVED.equals(normalized)) {
             return normalized;
         }
-        throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+        throw new GeneralException(SpaceErrorStatus._INVALID_SORT);
     }
 
     public SpaceListResponse getRecentPlaces(Member member, Integer size, String cursor) {
@@ -241,7 +241,7 @@ public class PlaceQueryService {
                 SpaceCursor cursorToken = SpaceCursor.decode(cursor);
                 lastId = cursorToken.getLastId();
                 if (cursorToken.getSort() == null || !RECENT_SORT.equalsIgnoreCase(cursorToken.getSort())) {
-                    throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+                    throw new GeneralException(SpaceErrorStatus._INVALID_CURSOR);
                 }
                 if (cursorToken.getLastDistance() != null) {
                     lastViewedAt = LocalDateTime.ofInstant(
@@ -250,7 +250,7 @@ public class PlaceQueryService {
                     );
                 }
             } catch (IllegalArgumentException e) {
-                throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+                throw new GeneralException(SpaceErrorStatus._INVALID_CURSOR);
             }
         }
 
@@ -454,13 +454,13 @@ public class PlaceQueryService {
     // lat/lng 범위 확인
     private void validateLocation(Double lat, Double lng) {
         if (lat == null || lng == null) {
-            throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+            throw new GeneralException(SpaceErrorStatus._INVALID_LOCATION);
         }
         if (!Double.isFinite(lat) || !Double.isFinite(lng)) {
-            throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+            throw new GeneralException(SpaceErrorStatus._INVALID_LOCATION);
         }
         if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-            throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+            throw new GeneralException(SpaceErrorStatus._INVALID_LOCATION);
         }
     }
 
@@ -469,7 +469,7 @@ public class PlaceQueryService {
             return DEFAULT_SIZE;
         }
         if (size <= 0 || size > MAX_SIZE) {
-            throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+            throw new GeneralException(SpaceErrorStatus._INVALID_SIZE);
         }
         return size;
     }
@@ -529,13 +529,13 @@ public class PlaceQueryService {
     // - 대문자 변환 후 TastingNoteTypeCode enum 기준으로 검증
     private String normalizeAndValidateTypeCode(String tastingTypeCode) {
         if (tastingTypeCode == null || tastingTypeCode.trim().isEmpty()) {
-            throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+            throw new GeneralException(SpaceErrorStatus._INVALID_TASTING_TYPE);
         }
         String normalizedTypeCode = tastingTypeCode.trim().toUpperCase();
         try {
             com.example.SeaTea.domain.diagnosis.enums.TastingNoteTypeCode.valueOf(normalizedTypeCode);
         } catch (IllegalArgumentException e) {
-            throw new GeneralException(SpaceErrorStatus._INVALID_PARAMS);
+            throw new GeneralException(SpaceErrorStatus._INVALID_TASTING_TYPE);
         }
         return normalizedTypeCode;
     }
