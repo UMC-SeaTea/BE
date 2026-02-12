@@ -2,8 +2,10 @@ package com.example.SeaTea.domain.place.service;
 
 import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.domain.place.dto.PlaceSaveResponse;
+import com.example.SeaTea.domain.place.entity.MemberRecentPlace;
 import com.example.SeaTea.domain.place.entity.MemberSavedPlace;
 import com.example.SeaTea.domain.place.entity.Place;
+import com.example.SeaTea.domain.place.repository.MemberRecentPlaceRepository;
 import com.example.SeaTea.domain.place.repository.MemberSavedPlaceRepository;
 import com.example.SeaTea.domain.place.repository.PlaceRepository;
 import com.example.SeaTea.domain.place.status.SpaceErrorStatus;
@@ -18,6 +20,7 @@ public class PlaceCommandService {
 
     private final PlaceRepository placeRepository;
     private final MemberSavedPlaceRepository memberSavedPlaceRepository;
+    private final MemberRecentPlaceRepository memberRecentPlaceRepository;
 
     @Transactional
     public PlaceSaveResponse savePlace(Member member, Long placeId) {
@@ -42,5 +45,20 @@ public class PlaceCommandService {
                 .ifPresent(memberSavedPlaceRepository::delete);
 
         return PlaceSaveResponse.unsaved();
+    }
+
+    @Transactional
+    public void recordRecentView(Member member, Long placeId) {
+        Place place = placeRepository.findById(placeId)
+                .orElseThrow(() -> new GeneralException(SpaceErrorStatus._NOT_FOUND));
+
+        memberRecentPlaceRepository.findByMember_IdAndPlace_PlaceId(member.getId(), placeId)
+                .ifPresentOrElse(
+                    existing -> {
+                        existing.touchViewedAt();
+                        memberRecentPlaceRepository.save(existing);
+                    },
+                    () -> memberRecentPlaceRepository.save(MemberRecentPlace.of(member, place))
+                );
     }
 }
