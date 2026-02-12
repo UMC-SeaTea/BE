@@ -85,7 +85,7 @@ public class DiagnosisController {
         return ApiResponse.onSuccess(diagnosisResultService.getMyLatestResult(member));
     }
 
-    //과거 진단이력 조회 ( 슬라이스로 페이징 : 처음은 3개, 그 프론트에서 10개를 명시하면 됨.)
+    //과거 진단이력 조회 ( 슬라이스로 페이징 : 페이징은 10개씩 하되, 처음 노출은 3개만..)
     @Operation(summary = "나의 진단 이력 조회", description = "완료된 진단 이력을 페이지 단위로 조회합니다.")
     @GetMapping("/me/history")
     public ApiResponse<Slice<DiagnosisHistoryResponseDTO>> getMyDiagnosisHistory(
@@ -93,7 +93,7 @@ public class DiagnosisController {
             @Parameter(description = "페이지 번호 (0부터 시작)")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기")
-            @RequestParam(defaultValue = "3") int size
+            @RequestParam(defaultValue = "10") int size
     ) {
         if (customUserDetails == null) { //로그인안되면 COMMON401
             throw new GeneralException(ErrorStatus._UNAUTHORIZED);
