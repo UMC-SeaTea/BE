@@ -5,10 +5,11 @@ import com.example.SeaTea.global.auth.Kakao.KakaoOAuth2UserService;
 import com.example.SeaTea.global.auth.entity.JwtAuthenticationFilter;
 import com.example.SeaTea.global.auth.entity.JwtTokenProvider;
 import com.example.SeaTea.global.auth.repository.HttpCookieOAuth2AuthorizationRequestRepository;
+import com.example.SeaTea.global.config.handler.CustomAccessDeniedHandler;
+import com.example.SeaTea.global.config.handler.CustomAuthenticationEntryPoint;
 import com.example.SeaTea.global.config.handler.CustomFailureHandler;
 import com.example.SeaTea.global.config.handler.CustomLogoutSuccessHandler;
 import com.example.SeaTea.global.config.handler.CustomSuccessHandler;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,6 +38,8 @@ public class SecurityConfig {
   private final AuthenticationConfiguration authenticationConfiguration;
   private final JwtTokenProvider jwtTokenProvider;
   private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
+  private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint; // 401 에러
+  private final CustomAccessDeniedHandler customAccessDeniedHandler; // 403 에러
 
   private final String[] allowUris = {
       "/api/login",
@@ -78,7 +81,7 @@ public class SecurityConfig {
     filter.setAuthenticationFailureHandler(customFailureHandler);
 
     // 만약 로그인이 수행될 URL을 필터 생성자 외에 여기서도 지정
-//     filter.setFilterProcessesUrl("/api/login");
+     filter.setFilterProcessesUrl("/api/login");
      return filter;
   }
 
@@ -122,11 +125,10 @@ public class SecurityConfig {
 //            .logoutSuccessUrl("/login?logout")
         )
 
+        // 예외처리 핸들러
         .exceptionHandling(conf -> conf
-          .authenticationEntryPoint((request, response, authException) -> {
-          // 페이지 이동(302) 대신 401 에러 코드 전송
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-          })
+            .authenticationEntryPoint(customAuthenticationEntryPoint)
+            .accessDeniedHandler(customAccessDeniedHandler)
         )
 
         .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)

@@ -1,11 +1,10 @@
 package com.example.SeaTea.domain.member.dto.response;
 
-import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.global.auth.enums.Role;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 public class MemberResDTO {
 
@@ -29,8 +28,10 @@ public class MemberResDTO {
   ){}
 
   @Builder
-  public static record LoginRequestDTO(
+  public record LoginRequestDTO(
+      @Schema(description = "사용자 이메일", example = "test@naver.com")
       String email,
+      @Schema(description = "비밀번호", example = "password123")
       String password
   ){}
 
@@ -62,10 +63,6 @@ public class MemberResDTO {
   public static class Exceptions {
     private String message;
   }
-
-  @Builder
-  @Getter
-  public static class MemberNotFound {}
 
   @Builder
   public record MemberInfoDTO(
