@@ -156,9 +156,9 @@ public class DiagnosisDetailService {
         log.warn("[STEP2 SCORES] {}", step2Scores);
         log.warn("[TOTAL SCORES] {}", totalScores);
 
-        // 4) Step1+Step2 점수로 최종 타입 결정
+        // 4) Step1+Step2 점수로 최종 타입 결정 (DTO 의존 제거: q3 값만 전달)
         TastingNoteTypeCode finalCode =
-                DiagnosisResultDecider.decideFinal(req, step1Scores, step2Scores);
+                DiagnosisResultDecider.decideFinal(step1.q3(), step1Scores, step2Scores);
 
         String finalCodeStr = finalCode.name();
 
