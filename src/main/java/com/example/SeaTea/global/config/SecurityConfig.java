@@ -53,6 +53,9 @@ public class SecurityConfig {
       "/api/users/me",
       "/api/images/uploads/**",
 
+      // 토큰 재발급 허용
+      "/api/users/reissue",
+
       // api 연동 확인할 때만 선택적으로 주석 풀어서 하기(주석 풀면 인증 없이 /api/** 모든 접근 가능)
 //      "/api/**",
 

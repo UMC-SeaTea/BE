@@ -32,10 +32,10 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
       setErrorResponse(response, e.getCode().getReason().getCode(), e.getCode().getReason().getMessage());
     } catch (ExpiredJwtException e) {
       // 토큰 만료
-      setErrorResponse(response, MemberErrorCode._JWT_WRONG.getCode(), "토큰이 만료되었습니다.");
+      setErrorResponse(response, MemberErrorCode._JWT_WRONG.getReason().getCode(), "토큰이 만료되었습니다.");
     } catch (JwtException | IllegalArgumentException e) {
       // 그 외 JWT 관련 오류
-      setErrorResponse(response, MemberErrorCode._JWT_WRONG.getCode(), MemberErrorCode._JWT_WRONG.getMessage());
+      setErrorResponse(response, MemberErrorCode._JWT_WRONG.getReason().getCode(), MemberErrorCode._JWT_WRONG.getReason().getMessage());
     }
   }
 
