@@ -7,12 +7,17 @@ import com.example.SeaTea.domain.member.entity.Member;
 import com.example.SeaTea.domain.member.exception.MemberException;
 import com.example.SeaTea.domain.member.exception.code.MemberErrorCode;
 import com.example.SeaTea.domain.member.repository.MemberRepository;
+import com.example.SeaTea.global.auth.entity.JwtTokenProvider;
+import com.example.SeaTea.global.auth.entity.RefreshToken;
 import com.example.SeaTea.global.auth.enums.Role;
 import com.example.SeaTea.global.auth.repository.RefreshTokenRepository;
 import com.example.SeaTea.domain.diagnosis.repository.DiagnosisResponseRepository;
 import com.example.SeaTea.domain.diagnosis.repository.DiagnosisSessionRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseCookie;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +32,7 @@ public class MemberCommandServiceImpl implements MemberCommandService {
   private final RefreshTokenRepository refreshTokenRepository;
   private final DiagnosisResponseRepository diagnosisResponseRepository;
   private final DiagnosisSessionRepository diagnosisSessionRepository;
+  private final JwtTokenProvider jwtTokenProvider;
 
   // 회원가입
   @Override
@@ -152,4 +158,46 @@ public class MemberCommandServiceImpl implements MemberCommandService {
     memberRepository.delete(realMember);
   }
 
+  @Override
+  @Transactional
+  public String reissue(String refreshToken, HttpServletResponse response) {
+    // Refresh Token 검증
+    if (refreshToken == null || !jwtTokenProvider.validateToken(refreshToken)) {
+      throw new MemberException(MemberErrorCode._JWT_WRONG);
+    }
+
+    // 토큰에서 유저 정보 추출
+    Authentication authentication = jwtTokenProvider.getAuthentication(refreshToken);
+    // CustomUserDetails의 필드명에 맞춰 memberId를 가져옵니다.
+    Long userId = Long.parseLong(authentication.getName());
+
+    // DB에 저장된 Refresh Token 확인
+    RefreshToken savedToken = refreshTokenRepository.findByUserId(userId)
+        .orElseThrow(() -> new MemberException(MemberErrorCode._JWT_WRONG));
+
+    // DB의 토큰과 요청받은 토큰이 일치하는지 비교 (보안상 매우 중요)
+    if (!savedToken.getToken().equals(refreshToken)) {
+      throw new MemberException(MemberErrorCode._JWT_WRONG);
+    }
+
+    // 새로운 Access Token & Refresh Token 생성
+    String newAccessToken = jwtTokenProvider.createAccessToken(authentication);
+    String newRefreshToken = jwtTokenProvider.createRefreshToken(authentication);
+
+    // DB 업데이트 (Refresh Token Rotation)
+    savedToken.updateToken(newRefreshToken);
+    refreshTokenRepository.save(savedToken);
+
+    // 새로운 Refresh Token을 쿠키에 설정 (기존 핸들러에서 사용하던 방식대로 응답)
+    ResponseCookie cookie = ResponseCookie.from("refreshToken", newRefreshToken)
+        .path("/")
+        .sameSite("None")
+        .httpOnly(true)
+        .secure(true) // 배포 환경 고려
+        .maxAge(14 * 24 * 60 * 60) // 14일
+        .build();
+    response.addHeader("Set-Cookie", cookie.toString());
+
+    return newAccessToken;
+  }
 }

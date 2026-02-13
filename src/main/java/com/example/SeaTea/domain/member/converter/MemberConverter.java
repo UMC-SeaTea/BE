@@ -87,14 +87,14 @@ public class MemberConverter {
         .profileImageUrl(member.getProfile_image())
         .role(member.getRole())
         .savedSpaceCount(savedCount)
-        .currentType(toTastingTypeDTO(type)) // ✅ 유형 변환 호출
+        .currentType(toTastingTypeDTO(type)) // 유형 변환 호출
         .createdAt(member.getCreatedAt())
         .updatedAt(member.getUpdatedAt())
         .build();
   }
 
   private static MemberResDTO.TastingTypeDTO toTastingTypeDTO(TastingNoteType type) {
-    if (type == null) return null; // ✅ 진단 전이면 null 반환
+    if (type == null) return null; // 진단 전이면 null 반환
 
     return MemberResDTO.TastingTypeDTO.builder()
         .id(type.getId())
@@ -104,6 +104,12 @@ public class MemberConverter {
         .description(type.getDescription())
         .imageUrl(type.getImageUrl())
         .createdAt(type.getCreatedAt())
+        .build();
+  }
+
+  public static MemberResDTO.TokenDTO toTokenDTO(String accessToken) {
+    return MemberResDTO.TokenDTO.builder()
+        .accessToken(accessToken)
         .build();
   }
 }

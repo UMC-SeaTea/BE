@@ -11,12 +11,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import io.jsonwebtoken.JwtException;
 import java.io.IOException;
 
-@Component
 @RequiredArgsConstructor
 public class JwtExceptionFilter extends OncePerRequestFilter {
   private final ObjectMapper objectMapper;
@@ -29,7 +27,7 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
       filterChain.doFilter(request, response);
     } catch (MemberException e) {
       // 우리가 정의한 에러 코드 활용
-      setErrorResponse(response, e.getCode().toString(), e.getMessage());
+      setErrorResponse(response, e.getCode().getReason().getCode(), e.getCode().getReason().getMessage());
     } catch (ExpiredJwtException e) {
       // 토큰 만료
       setErrorResponse(response, MemberErrorCode._JWT_WRONG.getCode(), "토큰이 만료되었습니다.");

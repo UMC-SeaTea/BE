@@ -88,4 +88,11 @@ public class MemberResDTO {
       String imageUrl,
       LocalDateTime createdAt
   ) {}
+
+  // refresh 토큰으로 토큰 업데이트
+  @Builder
+  public record TokenDTO(
+      @Schema(description = "새로 발급된 Access Token")
+      String accessToken
+  ){}
 }
