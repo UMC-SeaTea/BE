@@ -4,6 +4,7 @@ import com.example.SeaTea.global.auth.entity.JsonLoginFilter;
 import com.example.SeaTea.global.auth.Kakao.KakaoOAuth2UserService;
 import com.example.SeaTea.global.auth.entity.JwtAuthenticationFilter;
 import com.example.SeaTea.global.auth.entity.JwtTokenProvider;
+import com.example.SeaTea.global.auth.exception.JwtExceptionFilter;
 import com.example.SeaTea.global.auth.repository.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.example.SeaTea.global.config.handler.CustomAccessDeniedHandler;
 import com.example.SeaTea.global.config.handler.CustomAuthenticationEntryPoint;
@@ -40,6 +41,7 @@ public class SecurityConfig {
   private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
   private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint; // 401 에러
   private final CustomAccessDeniedHandler customAccessDeniedHandler; // 403 에러
+  private final JwtExceptionFilter jwtExceptionFilter;
 
   private final String[] allowUris = {
       "/api/login",
@@ -133,10 +135,14 @@ public class SecurityConfig {
             .accessDeniedHandler(customAccessDeniedHandler)
         )
 
+        // JWT 인증 필터 등록
         .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
 
-        // 커스텀 JSON 필터를 UsernamePasswordAuthenticationFilter 위치에 추가
-        .addFilterAt(jsonLoginFilter(), org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
+        // 예외 처리 필터
+        .addFilterBefore(jwtExceptionFilter, JwtAuthenticationFilter.class)
+
+        // 커스텀 JSON 필터 등록
+        .addFilterAt(jsonLoginFilter(), UsernamePasswordAuthenticationFilter.class)
 
         // CORS 설정
         .cors(cors -> cors.configurationSource(corsConfigurationSource));
