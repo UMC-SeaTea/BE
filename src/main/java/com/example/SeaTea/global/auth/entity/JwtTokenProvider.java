@@ -79,6 +79,7 @@ public class JwtTokenProvider {
 
     return Jwts.builder()
         .setSubject(String.valueOf(userDetails.getMember().getId()))
+        .claim("role", userDetails.getMember().getRole().name())
         .setIssuedAt(new Date())
         .setExpiration(new Date(System.currentTimeMillis() + refreshTokenValidityInMilliseconds))
         .signWith(key, SignatureAlgorithm.HS256)
