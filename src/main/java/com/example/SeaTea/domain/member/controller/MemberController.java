@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -204,6 +205,16 @@ public class MemberController {
     return ApiResponse.onSuccess(result);
   }
 
+  @PostMapping("/users/reissue")
+  public ApiResponse<MemberResDTO.TokenDTO> reissue(
+      @CookieValue(name = "refreshToken", required = false) String refreshToken,
+      HttpServletResponse response
+  ) {
+    String newAccessToken = memberCommandService.reissue(refreshToken, response);
+
+    // 응답 규격에 맞는 DTO 생성 (accessToken만 담아서 반환)
+    return ApiResponse.onSuccess(MemberConverter.toTokenDTO(newAccessToken));
+  }
 
   @DeleteMapping("/users/delete")
   public ApiResponse<String> withdraw(
