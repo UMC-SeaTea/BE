@@ -3,6 +3,7 @@ package com.example.SeaTea.domain.member.service.command;
 import com.example.SeaTea.domain.member.dto.request.MemberReqDTO;
 import com.example.SeaTea.domain.member.dto.response.MemberResDTO;
 import com.example.SeaTea.domain.member.entity.Member;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 public interface MemberCommandService {
@@ -24,5 +25,5 @@ public interface MemberCommandService {
   void withdraw(Member member);
 
   // 토큰 재발급
-  String reissue(String refreshToken, HttpServletResponse response);
+  String reissue(String refreshToken, HttpServletResponse response, HttpServletRequest request);
 }

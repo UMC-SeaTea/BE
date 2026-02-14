@@ -88,29 +88,43 @@ public class JwtTokenProvider {
 
   // 토큰에서 회원 정보 추출 (Authentication 객체 생성하여 필터에서 인증 성공 시 SecurityContext에 저장할 객체 생성
   public Authentication getAuthentication(String accessToken) {
+
+    if (accessToken == null || accessToken.isEmpty()) {
+      throw new MemberException(MemberErrorCode._JWT_WRONG);
+    }
+
     // 토큰 복호화
     Claims claims = parseClaims(accessToken);
 
-    if (claims.get("role") == null) {
+    String email = claims.get("email", String.class);
+    if (email == null) {
+      email = claims.getSubject();
+    }
+
+    if (claims.getSubject() == null) {
+      throw new MemberException(MemberErrorCode._JWT_WRONG);
+    }
+
+    String roleName = claims.get("role", String.class);
+    if (roleName == null) {
       throw new MemberException(MemberErrorCode._NOT_RIGHT);
     }
 
     // 클레임에서 권한 정보 가져오기
     Collection<? extends GrantedAuthority> authorities =
-        Arrays.stream(claims.get("role").toString().split(","))
-            .map(SimpleGrantedAuthority::new)
-            .collect(Collectors.toList());
+        java.util.Collections.singletonList(new SimpleGrantedAuthority(roleName));
 
     // Member 엔티티 생성(ID와 Role만 채움/가짜 객체임)
     Member member = Member.builder()
         .id(Long.parseLong(claims.getSubject()))
-        .role(Role.valueOf(claims.get("role").toString()))
+        .email(email)
+        .role(Role.valueOf(roleName))
         .build();
 
     // CustomUserDetails 생성(DB 조회 없이!)
     CustomUserDetails principal = new CustomUserDetails(member);
 
-    return new UsernamePasswordAuthenticationToken(principal, "", authorities);
+    return new UsernamePasswordAuthenticationToken(principal, null, authorities);
   }
 
   // 토큰 유효성 검증(토큰이 위변조되지 않았는지, 만료되지 않았는지 확인)

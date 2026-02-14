@@ -12,6 +12,7 @@ import com.example.SeaTea.domain.member.service.query.MemberQueryService;
 import com.example.SeaTea.global.apiPayLoad.ApiResponse;
 import com.example.SeaTea.global.auth.service.CustomUserDetails;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.util.Map;
@@ -209,8 +210,9 @@ public class MemberController {
   public ApiResponse<MemberResDTO.TokenDTO> reissue(
       @CookieValue(name = "refreshToken", required = false) String refreshToken,
       HttpServletResponse response
+      , HttpServletRequest request
   ) {
-    String newAccessToken = memberCommandService.reissue(refreshToken, response);
+    String newAccessToken = memberCommandService.reissue(refreshToken, response, request);
 
     // 응답 규격에 맞는 DTO 생성 (accessToken만 담아서 반환)
     return ApiResponse.onSuccess(MemberConverter.toTokenDTO(newAccessToken));

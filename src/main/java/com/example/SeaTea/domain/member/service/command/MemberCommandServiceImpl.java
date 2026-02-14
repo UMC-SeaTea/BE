@@ -13,6 +13,9 @@ import com.example.SeaTea.global.auth.enums.Role;
 import com.example.SeaTea.global.auth.repository.RefreshTokenRepository;
 import com.example.SeaTea.domain.diagnosis.repository.DiagnosisResponseRepository;
 import com.example.SeaTea.domain.diagnosis.repository.DiagnosisSessionRepository;
+import com.example.SeaTea.global.auth.service.CustomUserDetails;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
@@ -160,16 +163,35 @@ public class MemberCommandServiceImpl implements MemberCommandService {
 
   @Override
   @Transactional
-  public String reissue(String refreshToken, HttpServletResponse response) {
+  public String reissue(String refreshToken, HttpServletResponse response, HttpServletRequest request) {
+    Cookie[] cookies = request.getCookies();
+    if (cookies != null) {
+      for (Cookie c : cookies) {
+        System.out.println("서버에 도착한 쿠키 이름: " + c.getName() + ", 값: " + c.getValue());
+      }
+    } else {
+      System.out.println("서버에 도착한 쿠키가 아예 없습니다!");
+    }
     // Refresh Token 검증
-    if (refreshToken == null || !jwtTokenProvider.validateToken(refreshToken)) {
+    if (refreshToken == null || refreshToken.isBlank() || refreshToken.equals("null")) {
       throw new MemberException(MemberErrorCode._JWT_WRONG);
     }
 
-    // 토큰에서 유저 정보 추출
-    Authentication authentication = jwtTokenProvider.getAuthentication(refreshToken);
-    // CustomUserDetails의 필드명에 맞춰 memberId를 가져옵니다.
-    Long userId = Long.parseLong(authentication.getName());
+    Authentication authentication;
+    try {
+      authentication = jwtTokenProvider.getAuthentication(refreshToken);
+    } catch (Exception e) {
+      // 서명이 아예 다르거나 깨진 토큰일 경우만 예외 처리
+      throw new MemberException(MemberErrorCode._JWT_WRONG);
+    }
+
+    if (authentication == null || authentication.getName() == null) {
+      throw new MemberException(MemberErrorCode._JWT_WRONG);
+    }
+
+    // CustomUserDetails의 필드명에 맞춰 memberId를 가져오기
+    CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+    Long userId = userDetails.getMember().getId(); // 이미 객체에 저장된 ID를 사용 (파싱 불필요)
 
     // DB에 저장된 Refresh Token 확인
     RefreshToken savedToken = refreshTokenRepository.findByUserId(userId)
@@ -190,12 +212,20 @@ public class MemberCommandServiceImpl implements MemberCommandService {
 
     // 새로운 Refresh Token을 쿠키에 설정 (기존 핸들러에서 사용하던 방식대로 응답)
     ResponseCookie cookie = ResponseCookie.from("refreshToken", newRefreshToken)
+        // 로컬 테스트
         .path("/")
-        .sameSite("None")
+        // Localhost 테스트용 설정
+        .sameSite("Lax")  // None은 Secure가 필수이므로 Lax로 변경
         .httpOnly(true)
-        .secure(true) // 배포 환경 고려
-        .maxAge(14 * 24 * 60 * 60) // 14일
+        .secure(false)    // 로컬(http)에서는 false여야 전송됨!
+        .maxAge(14 * 24 * 60 * 60)
         .build();
+//        .path("/")
+//        .sameSite("None")
+//        .httpOnly(true)
+//        .secure(true) // 배포 환경 고려
+//        .maxAge(14 * 24 * 60 * 60) // 14일
+//        .build();
     response.addHeader("Set-Cookie", cookie.toString());
 
     return newAccessToken;
