@@ -169,7 +169,7 @@ public class MemberCommandServiceImpl implements MemberCommandService {
 
   @Override
   @Transactional
-  public String reissue(String refreshToken, HttpServletResponse response, HttpServletRequest request) {
+  public String reissue(String refreshToken, HttpServletResponse response) {
     // Refresh Token 검증
     if (refreshToken == null || refreshToken.isBlank() || refreshToken.equals("null")) {
       throw new MemberException(MemberErrorCode._JWT_WRONG);

@@ -210,9 +210,8 @@ public class MemberController {
   public ApiResponse<MemberResDTO.TokenDTO> reissue(
       @CookieValue(name = "refreshToken", required = false) String refreshToken,
       HttpServletResponse response
-      , HttpServletRequest request
   ) {
-    String newAccessToken = memberCommandService.reissue(refreshToken, response, request);
+    String newAccessToken = memberCommandService.reissue(refreshToken, response);
 
     // 응답 규격에 맞는 DTO 생성 (accessToken만 담아서 반환)
     return ApiResponse.onSuccess(MemberConverter.toTokenDTO(newAccessToken));

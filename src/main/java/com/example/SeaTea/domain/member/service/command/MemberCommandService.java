@@ -25,5 +25,5 @@ public interface MemberCommandService {
   void withdraw(Member member);
 
   // 토큰 재발급
-  String reissue(String refreshToken, HttpServletResponse response, HttpServletRequest request);
+  String reissue(String refreshToken, HttpServletResponse response);
 }

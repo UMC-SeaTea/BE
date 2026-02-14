@@ -105,6 +105,13 @@ public class JwtTokenProvider {
       throw new MemberException(MemberErrorCode._NOT_RIGHT);
     }
 
+    Role role;
+    try {
+      role = Role.valueOf(roleName);
+    } catch (IllegalArgumentException e) {
+      throw new MemberException(MemberErrorCode._NOT_RIGHT);
+    }
+
     // 클레임에서 권한 정보 가져오기
     Collection<? extends GrantedAuthority> authorities =
         java.util.Collections.singletonList(new SimpleGrantedAuthority(roleName));
@@ -113,7 +120,7 @@ public class JwtTokenProvider {
     Member member = Member.builder()
         .id(Long.parseLong(claims.getSubject()))
         .email(email)
-        .role(Role.valueOf(roleName))
+        .role(role)
         .build();
 
     // CustomUserDetails 생성(DB 조회 없이!)
