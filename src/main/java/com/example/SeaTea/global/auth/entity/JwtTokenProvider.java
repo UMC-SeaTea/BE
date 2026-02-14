@@ -116,9 +116,16 @@ public class JwtTokenProvider {
     Collection<? extends GrantedAuthority> authorities =
         java.util.Collections.singletonList(new SimpleGrantedAuthority(roleName));
 
+    Long memberId;
+    try {
+      memberId = Long.parseLong(claims.getSubject());
+    } catch (NumberFormatException e) {
+      throw new MemberException(MemberErrorCode._JWT_WRONG);
+    }
+
     // Member 엔티티 생성(ID와 Role만 채움/가짜 객체임)
     Member member = Member.builder()
-        .id(Long.parseLong(claims.getSubject()))
+        .id(memberId)
         .email(email)
         .role(role)
         .build();

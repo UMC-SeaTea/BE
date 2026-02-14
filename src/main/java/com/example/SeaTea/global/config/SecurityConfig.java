@@ -52,6 +52,8 @@ public class SecurityConfig {
       "/error",
       "/api/users/me",
       "/api/images/uploads/**",
+      "api/check/nickname",
+      "api/check/email",
 
       // 토큰 재발급 허용
       "/api/users/reissue",
