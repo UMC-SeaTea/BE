@@ -14,10 +14,8 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -32,9 +30,6 @@ public class JwtTokenProvider {
 
   // yml로 token 안전하게 가져오기
   public JwtTokenProvider(@Value("${jwt.secret}") String secretKey) {
-//    byte[] keyBytes = Decoders.BASE64.decode(Base64.getEncoder().encodeToString(secretKey.getBytes()));
-//    byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-//    this.key = Keys.hmacShaKeyFor(keyBytes);
     if (secretKey == null || secretKey.isEmpty()) {
       throw new IllegalArgumentException("SECRET_TOKEN 환경 변수가 설정되지 않았습니다!");
     }
@@ -88,29 +83,57 @@ public class JwtTokenProvider {
 
   // 토큰에서 회원 정보 추출 (Authentication 객체 생성하여 필터에서 인증 성공 시 SecurityContext에 저장할 객체 생성
   public Authentication getAuthentication(String accessToken) {
+
+    if (accessToken == null || accessToken.isEmpty()) {
+      throw new MemberException(MemberErrorCode._JWT_WRONG);
+    }
+
     // 토큰 복호화
     Claims claims = parseClaims(accessToken);
 
-    if (claims.get("role") == null) {
+    if (claims.getSubject() == null) {
+      throw new MemberException(MemberErrorCode._JWT_WRONG);
+    }
+
+    String email = claims.get("email", String.class);
+    if (email == null) {
+      email = claims.getSubject();
+    }
+
+    String roleName = claims.get("role", String.class);
+    if (roleName == null) {
+      throw new MemberException(MemberErrorCode._NOT_RIGHT);
+    }
+
+    Role role;
+    try {
+      role = Role.valueOf(roleName);
+    } catch (IllegalArgumentException e) {
       throw new MemberException(MemberErrorCode._NOT_RIGHT);
     }
 
     // 클레임에서 권한 정보 가져오기
     Collection<? extends GrantedAuthority> authorities =
-        Arrays.stream(claims.get("role").toString().split(","))
-            .map(SimpleGrantedAuthority::new)
-            .collect(Collectors.toList());
+        java.util.Collections.singletonList(new SimpleGrantedAuthority(roleName));
+
+    Long memberId;
+    try {
+      memberId = Long.parseLong(claims.getSubject());
+    } catch (NumberFormatException e) {
+      throw new MemberException(MemberErrorCode._JWT_WRONG);
+    }
 
     // Member 엔티티 생성(ID와 Role만 채움/가짜 객체임)
     Member member = Member.builder()
-        .id(Long.parseLong(claims.getSubject()))
-        .role(Role.valueOf(claims.get("role").toString()))
+        .id(memberId)
+        .email(email)
+        .role(role)
         .build();
 
     // CustomUserDetails 생성(DB 조회 없이!)
     CustomUserDetails principal = new CustomUserDetails(member);
 
-    return new UsernamePasswordAuthenticationToken(principal, "", authorities);
+    return new UsernamePasswordAuthenticationToken(principal, null, authorities);
   }
 
   // 토큰 유효성 검증(토큰이 위변조되지 않았는지, 만료되지 않았는지 확인)
