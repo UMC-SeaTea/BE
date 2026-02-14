@@ -56,6 +56,7 @@ app:
   frontend-callback-url: ${FRONTEND_CALLBACK_URL}
   cookie:
     secure: ${COOKIE_SECURE:false}
+    same-site: ${SAME_SITE:LAX}
 
 file:
   upload-dir: ${IMAGE_UPLOAD}

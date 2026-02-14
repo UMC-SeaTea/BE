@@ -14,11 +14,11 @@ import com.example.SeaTea.global.auth.repository.RefreshTokenRepository;
 import com.example.SeaTea.domain.diagnosis.repository.DiagnosisResponseRepository;
 import com.example.SeaTea.domain.diagnosis.repository.DiagnosisSessionRepository;
 import com.example.SeaTea.global.auth.service.CustomUserDetails;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,6 +36,12 @@ public class MemberCommandServiceImpl implements MemberCommandService {
   private final DiagnosisResponseRepository diagnosisResponseRepository;
   private final DiagnosisSessionRepository diagnosisSessionRepository;
   private final JwtTokenProvider jwtTokenProvider;
+
+  @Value("${app.cookie.secure}")
+  private boolean isSecure;
+
+  @Value("${app.cookie.same-site}")
+  private String sameSite;
 
   // 회원가입
   @Override
@@ -164,14 +170,6 @@ public class MemberCommandServiceImpl implements MemberCommandService {
   @Override
   @Transactional
   public String reissue(String refreshToken, HttpServletResponse response, HttpServletRequest request) {
-    Cookie[] cookies = request.getCookies();
-    if (cookies != null) {
-      for (Cookie c : cookies) {
-        System.out.println("서버에 도착한 쿠키 이름: " + c.getName() + ", 값: " + c.getValue());
-      }
-    } else {
-      System.out.println("서버에 도착한 쿠키가 아예 없습니다!");
-    }
     // Refresh Token 검증
     if (refreshToken == null || refreshToken.isBlank() || refreshToken.equals("null")) {
       throw new MemberException(MemberErrorCode._JWT_WRONG);
@@ -212,20 +210,12 @@ public class MemberCommandServiceImpl implements MemberCommandService {
 
     // 새로운 Refresh Token을 쿠키에 설정 (기존 핸들러에서 사용하던 방식대로 응답)
     ResponseCookie cookie = ResponseCookie.from("refreshToken", newRefreshToken)
-        // 로컬 테스트
         .path("/")
-        // Localhost 테스트용 설정
-        .sameSite("Lax")  // None은 Secure가 필수이므로 Lax로 변경
+        .sameSite(sameSite) // 로컬: LAX 배포: None
         .httpOnly(true)
-        .secure(false)    // 로컬(http)에서는 false여야 전송됨!
-        .maxAge(14 * 24 * 60 * 60)
+        .secure(isSecure) // 로컬: false 배포: true
+        .maxAge(14 * 24 * 60 * 60) // 14일
         .build();
-//        .path("/")
-//        .sameSite("None")
-//        .httpOnly(true)
-//        .secure(true) // 배포 환경 고려
-//        .maxAge(14 * 24 * 60 * 60) // 14일
-//        .build();
     response.addHeader("Set-Cookie", cookie.toString());
 
     return newAccessToken;

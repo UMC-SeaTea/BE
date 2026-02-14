@@ -14,10 +14,8 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -32,9 +30,6 @@ public class JwtTokenProvider {
 
   // yml로 token 안전하게 가져오기
   public JwtTokenProvider(@Value("${jwt.secret}") String secretKey) {
-//    byte[] keyBytes = Decoders.BASE64.decode(Base64.getEncoder().encodeToString(secretKey.getBytes()));
-//    byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-//    this.key = Keys.hmacShaKeyFor(keyBytes);
     if (secretKey == null || secretKey.isEmpty()) {
       throw new IllegalArgumentException("SECRET_TOKEN 환경 변수가 설정되지 않았습니다!");
     }
@@ -96,13 +91,13 @@ public class JwtTokenProvider {
     // 토큰 복호화
     Claims claims = parseClaims(accessToken);
 
+    if (claims.getSubject() == null) {
+      throw new MemberException(MemberErrorCode._JWT_WRONG);
+    }
+
     String email = claims.get("email", String.class);
     if (email == null) {
       email = claims.getSubject();
-    }
-
-    if (claims.getSubject() == null) {
-      throw new MemberException(MemberErrorCode._JWT_WRONG);
     }
 
     String roleName = claims.get("role", String.class);

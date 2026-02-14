@@ -21,7 +21,6 @@ public class MemberReqDTO {
   // 닉네임 업데이트
   public record UpdateNicknameDTO(
       @NotBlank
-      @Size(min = 2, max = 10)
       String newNickname
   ){}
 

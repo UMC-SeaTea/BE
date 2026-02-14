@@ -28,7 +28,7 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
       // 다음 필터(JwtAuthenticationFilter) 실행
       filterChain.doFilter(request, response);
     } catch (MemberException e) {
-      // 우리가 정의한 에러 코드 활용omm
+      // 우리가 정의한 에러 코드 활용
       setErrorResponse(response, e.getCode().getReason().getCode(), e.getCode().getReason().getMessage());
     } catch (ExpiredJwtException e) {
       // 토큰 만료
