@@ -14,7 +14,6 @@ import com.example.SeaTea.global.auth.repository.RefreshTokenRepository;
 import com.example.SeaTea.domain.diagnosis.repository.DiagnosisResponseRepository;
 import com.example.SeaTea.domain.diagnosis.repository.DiagnosisSessionRepository;
 import com.example.SeaTea.global.auth.service.CustomUserDetails;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
@@ -116,7 +115,7 @@ public class MemberCommandServiceImpl implements MemberCommandService {
 
     // 기존 파일 삭제
     String oldImageUrl = realMember.getProfile_image();
-    if (oldImageUrl != null && !oldImageUrl.isEmpty()) {
+    if (oldImageUrl != null && !oldImageUrl.equals(dto.profileImageUrl())) {
       imageService.delete(oldImageUrl);
     }
 

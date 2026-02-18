@@ -44,6 +44,17 @@ public class ImageServiceImpl implements ImageService {
       if (!allowedExtensions.contains(extension.toLowerCase())) {
         throw new MemberException(MemberErrorCode._UNALLOWED_FILENAME);
       }
+
+      // 파일 비어있는지 체크
+      if (file.isEmpty()) {
+        throw new MemberException(MemberErrorCode._FILE_EMPTY);
+      }
+
+      // 파일 크기 제한 5MB
+      if (file.getSize() > 5 * 1024 * 1024) {
+        throw new MemberException(MemberErrorCode._FILE_TOO_LARGE);
+      }
+
       String contentType = file.getContentType();
       if (contentType == null || !allowedContentTypes.contains(contentType.toLowerCase())) {
         throw new MemberException(MemberErrorCode._UNALLOWED_FILENAME);
