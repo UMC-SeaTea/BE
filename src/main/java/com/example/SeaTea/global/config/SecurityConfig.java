@@ -51,6 +51,7 @@ public class SecurityConfig {
       "/v3/api-docs/**",
       "/error",
       "/api/users/me",
+      "/api/upload/profile/image",
       "/api/images/uploads/**",
       "api/check/nickname",
       "api/check/email",

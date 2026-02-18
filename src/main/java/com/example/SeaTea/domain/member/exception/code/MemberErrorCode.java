@@ -23,6 +23,7 @@ public enum MemberErrorCode implements BaseErrorCode {
   _INVALID_FILENAME(HttpStatus.BAD_REQUEST, "MEMBER409", "유효하지 않은 파일명입니다."),
   _UNALLOWED_FILENAME(HttpStatus.BAD_REQUEST, "MEMBER410", "허용되지 않은 파일 형식입니다."),
   _ACCESS_DENIED(HttpStatus.FORBIDDEN, "MEMBER411", "접근 권한이 없습니다."),
+  _FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "MEMBER412", "이미지의 크기가 너무 큽니다."),
   ;
 
   private final HttpStatus httpStatus;

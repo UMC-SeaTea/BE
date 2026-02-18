@@ -40,7 +40,7 @@ public class MemberConverter {
         .password(password)
         .role(role)
         .nickname(dto.nickname())
-//        .profile_image(dto.profile_image())
+        .profile_image(dto.profile_url())
         .build();
   }
 
